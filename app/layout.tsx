@@ -7,7 +7,7 @@ import { Suspense } from "react"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "LocksNotes - D&D Campaign Manager",
+  title: "Map of Many Places - D&D Campaign Manager",
   description: "Organize your D&D campaigns with notes, characters, regions, and tasks",
   generator: "v0.app",
 }

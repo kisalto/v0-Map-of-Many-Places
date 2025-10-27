@@ -2,8 +2,6 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { AdventureGrid } from "@/components/adventure-grid"
 import { CreateAdventureDialog } from "@/components/create-adventure-dialog"
-import { UserProfile } from "@/components/user-profile"
-import { Map, Compass, Scroll } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export default async function DashboardPage() {
@@ -14,37 +12,29 @@ export default async function DashboardPage() {
     redirect("/auth/login")
   }
 
-  // Get user profile
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
 
-  // Get user's adventures
   const { data: adventures } = await supabase
     .from("adventures")
-    .select("*")
-    .eq("creator_id", data.user.id)
+    .select(`
+      *,
+      adventure_members!inner(role)
+    `)
+    .eq("adventure_members.profile_id", data.user.id)
     .order("created_at", { ascending: false })
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50/30 to-yellow-100/20 parchment-texture">
+    <div className="min-h-screen bg-[#0B0A13]">
       {/* Header */}
-      <header className="border-b border-amber-600/30 bg-amber-50/80 backdrop-blur-sm ancient-border">
+      <header className="border-b border-[#EE9B3A]/30 bg-[#0B0A13]">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-amber-600/20 rounded-lg">
-                  <Map className="h-6 w-6 text-amber-700" />
-                </div>
-                <div className="p-2 bg-amber-700/20 rounded-lg">
-                  <Compass className="h-6 w-6 text-amber-800" />
-                </div>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-amber-900 font-serif">Map of Many Places</h1>
-                <p className="text-sm text-amber-700">Explore suas jornadas em pergaminhos antigos</p>
+            <h1 className="text-2xl font-serif font-bold text-[#E7D1B1]">Map of Many Places</h1>
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-[#302831] border border-[#EE9B3A]/30 flex items-center justify-center">
+                <span className="text-[#EE9B3A] font-semibold">{profile?.display_name?.[0]?.toUpperCase() || "U"}</span>
               </div>
             </div>
-            <UserProfile profile={profile} />
           </div>
         </div>
       </header>
@@ -53,23 +43,20 @@ export default async function DashboardPage() {
       <main className="container mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-3xl font-bold text-amber-900 mb-2 font-serif">
-              Bem-vindo, {profile?.display_name || "Explorador"}!
+            <h2 className="text-3xl font-serif font-bold text-[#E7D1B1] mb-2">
+              Bem-vindo, {profile?.display_name || "Usuário"}!
             </h2>
-            <p className="text-amber-700">
-              {profile?.role === "master" ? "Seus mapas como Cartógrafo Mestre" : "Suas jornadas como Aventureiro"}
-            </p>
+            <p className="text-[#9F8475]">Suas Campanhas</p>
           </div>
           <CreateAdventureDialog>
-            <Button className="bg-amber-600 hover:bg-amber-700 text-white gap-2 map-shadow border border-amber-700/30">
-              <Scroll className="h-4 w-4" />
-              Nova Entrada
-            </Button>
+            <Button className="bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13] font-semibold">Nova Campanha</Button>
           </CreateAdventureDialog>
         </div>
 
         {/* Adventures Grid */}
-        <AdventureGrid adventures={adventures || []} />
+        <div className="border border-[#EE9B3A]/30 rounded-lg p-6">
+          <AdventureGrid adventures={adventures || []} />
+        </div>
       </main>
     </div>
   )

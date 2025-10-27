@@ -4,76 +4,66 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Cores de pergaminho antigo para "Map of Many Places" */
-  --background: oklch(0.98 0.02 85); /* #fefce8 - fundo quente de pergaminho */
-  --foreground: oklch(0.35 0.01 240); /* #4b5563 - texto escuro para contraste */
-  --card: oklch(1 0 0); /* #ffffff - cards como pergaminho claro */
-  --card-foreground: oklch(0.35 0.01 240); /* #4b5563 - texto escuro nos cards */
-  --popover: oklch(0.98 0.02 85); /* #fefce8 - fundo de popups */
-  --popover-foreground: oklch(0.35 0.01 240); /* #4b5563 - texto de popups */
-  --primary: oklch(0.45 0.15 65); /* #a16207 - cor primária dourada envelhecida */
-  --primary-foreground: oklch(1 0 0); /* #ffffff - texto em botões primários */
-  --secondary: oklch(0.85 0.02 240); /* #cbd5e1 - elementos secundários */
-  --secondary-foreground: oklch(0.35 0.01 240); /* #4b5563 - texto secundário */
-  --muted: oklch(0.95 0.01 85); /* #f1f5f9 - texto esmaecido */
-  --muted-foreground: oklch(0.35 0.01 240); /* #4b5563 - cor do texto esmaecido */
-  --accent: oklch(0.85 0.02 240); /* #cbd5e1 - elementos de destaque */
-  --accent-foreground: oklch(0.35 0.01 240); /* #4b5563 - texto de destaque */
-  --destructive: oklch(0.5 0.2 25); /* Vermelho para ações destrutivas */
-  --destructive-foreground: oklch(1 0 0); /* Texto branco em ações destrutivas */
-  --border: oklch(0.35 0.01 240); /* #4b5563 - bordas escuras */
-  --input: oklch(1 0 0); /* #ffffff - campos de entrada */
-  --ring: oklch(0.45 0.15 65); /* #a16207 - anel de foco dourado */
-  --chart-1: oklch(0.4 0.15 160); /* Verde para gráficos */
-  --chart-2: oklch(0.5 0.15 200); /* Azul para gráficos */
-  --chart-3: oklch(0.45 0.15 65); /* Dourado para gráficos */
-  --chart-4: oklch(0.85 0.02 240); /* Cinza para gráficos */
-  --chart-5: oklch(0.35 0.01 240); /* Escuro para gráficos */
-  --radius: 0.5rem; /* Cantos arredondados suaves */
-  --sidebar: oklch(0.98 0.02 85); /* #fefce8 - fundo da sidebar */
-  --sidebar-foreground: oklch(0.35 0.01 240); /* #4b5563 - texto da sidebar */
-  --sidebar-primary: oklch(0.85 0.02 240); /* #cbd5e1 - destaque primário da sidebar */
-  --sidebar-primary-foreground: oklch(0.35 0.01 240); /* #4b5563 - texto do destaque primário */
-  --sidebar-accent: oklch(0.45 0.15 65); /* #a16207 - destaque da sidebar */
-  --sidebar-accent-foreground: oklch(1 0 0); /* #ffffff - texto do destaque */
-  --sidebar-border: oklch(0.35 0.01 240); /* #4b5563 - borda da sidebar */
-  --sidebar-ring: oklch(0.45 0.15 65); /* #a16207 - anel de foco da sidebar */
+  /* Cores do novo design baseado nas imagens fornecidas */
+  --background: #0b0a13; /* Fundo preto azulado escuro */
+  --foreground: #ffffff; /* Texto branco */
+  --card: #0b0a13; /* Cards com fundo escuro */
+  --card-foreground: #ffffff; /* Texto branco nos cards */
+  --popover: #0b0a13; /* Popups escuros */
+  --popover-foreground: #ffffff; /* Texto claro nos popups */
+  --primary: #ee9b3a; /* Laranja/dourado principal */
+  --primary-foreground: #0b0a13; /* Texto escuro em botões primários */
+  --secondary: #302831; /* Roxo escuro/preto */
+  --secondary-foreground: #ffffff; /* Texto claro secundário */
+  --muted: #302831; /* Esmaecido escuro */
+  --muted-foreground: #9f8475; /* Texto marrom claro esmaecido */
+  --accent: #ee9b3a; /* Destaque laranja/dourado */
+  --accent-foreground: #0b0a13; /* Texto escuro de destaque */
+  --destructive: #dc2626; /* Vermelho para ações destrutivas */
+  --destructive-foreground: #ffffff; /* Texto branco destrutivo */
+  --border: #ee9b3a; /* Bordas douradas */
+  --input: #0b0a13; /* Campos escuros */
+  --ring: #ee9b3a; /* Anel dourado */
+  --radius: 0.625rem;
+  --npc-badge: #84e557; /* Verde para badge NPC */
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
 .dark {
-  /* Modo escuro mantido mas com tons mais quentes */
-  --background: oklch(0.15 0.01 85); /* Fundo escuro quente */
-  --foreground: oklch(0.95 0.01 85); /* Texto claro quente */
-  --card: oklch(0.2 0.01 85); /* Cards escuros quentes */
-  --card-foreground: oklch(0.95 0.01 85); /* Texto claro nos cards */
-  --popover: oklch(0.15 0.01 85); /* Popups escuros */
-  --popover-foreground: oklch(0.95 0.01 85); /* Texto claro nos popups */
-  --primary: oklch(0.6 0.15 65); /* Dourado mais claro no escuro */
-  --primary-foreground: oklch(0.15 0.01 85); /* Texto escuro em botões primários */
-  --secondary: oklch(0.3 0.02 240); /* Secundário escuro */
-  --secondary-foreground: oklch(0.95 0.01 85); /* Texto claro secundário */
-  --muted: oklch(0.3 0.01 85); /* Esmaecido escuro */
-  --muted-foreground: oklch(0.7 0.01 85); /* Texto esmaecido claro */
-  --accent: oklch(0.3 0.02 240); /* Destaque escuro */
-  --accent-foreground: oklch(0.95 0.01 85); /* Texto de destaque claro */
-  --destructive: oklch(0.4 0.2 25); /* Vermelho escuro */
-  --destructive-foreground: oklch(0.95 0.01 85); /* Texto claro destrutivo */
-  --border: oklch(0.3 0.01 85); /* Bordas escuras quentes */
-  --input: oklch(0.2 0.01 85); /* Campos escuros */
-  --ring: oklch(0.6 0.15 65); /* Anel dourado claro */
-  --chart-1: oklch(0.5 0.15 160); /* Cores de gráfico ajustadas */
-  --chart-2: oklch(0.6 0.15 200);
-  --chart-3: oklch(0.6 0.15 65);
-  --chart-4: oklch(0.4 0.02 240);
-  --chart-5: oklch(0.7 0.01 85);
-  --sidebar: oklch(0.18 0.01 85); /* Sidebar escura quente */
-  --sidebar-foreground: oklch(0.95 0.01 85); /* Texto claro da sidebar */
-  --sidebar-primary: oklch(0.6 0.15 65); /* Destaque dourado da sidebar */
-  --sidebar-primary-foreground: oklch(0.15 0.01 85); /* Texto escuro do destaque */
-  --sidebar-accent: oklch(0.3 0.02 240); /* Destaque da sidebar */
-  --sidebar-accent-foreground: oklch(0.95 0.01 85); /* Texto do destaque */
-  --sidebar-border: oklch(0.3 0.01 85); /* Borda da sidebar */
-  --sidebar-ring: oklch(0.6 0.15 65); /* Anel da sidebar */
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --ring: oklch(0.439 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
 }
 
 @theme inline {
@@ -98,11 +88,6 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -123,36 +108,18 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* Adicionando textura de pergaminho */
-    background-image: radial-gradient(circle at 25% 25%, rgba(161, 98, 7, 0.05) 0%, transparent 50%),
-      radial-gradient(circle at 75% 75%, rgba(161, 98, 7, 0.03) 0%, transparent 50%),
-      linear-gradient(45deg, transparent 49%, rgba(161, 98, 7, 0.02) 50%, transparent 51%);
-    background-size: 200px 200px, 150px 150px, 100px 100px;
+    font-family: var(--font-sans);
   }
 }
 
-/* Adicionando estilos específicos para o tema de pergaminho */
-.parchment-texture {
-  background-image: radial-gradient(circle at 20% 80%, rgba(161, 98, 7, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(161, 98, 7, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(161, 98, 7, 0.05) 0%, transparent 50%);
-  background-size: 300px 300px, 200px 200px, 150px 150px;
+/* Estilos específicos para o novo design */
+.golden-border {
+  border: 2px solid #ee9b3a;
 }
 
-.ancient-border {
-  border: 2px solid;
-  border-image: linear-gradient(
-      45deg,
-      rgba(161, 98, 7, 0.8) 0%,
-      rgba(161, 98, 7, 0.4) 25%,
-      rgba(161, 98, 7, 0.8) 50%,
-      rgba(161, 98, 7, 0.4) 75%,
-      rgba(161, 98, 7, 0.8) 100%
-    )
-    1;
-}
-
-.map-shadow {
-  box-shadow: 0 4px 6px -1px rgba(161, 98, 7, 0.1), 0 2px 4px -1px rgba(161, 98, 7, 0.06), inset 0 1px 0
-    rgba(255, 255, 255, 0.1);
+.golden-underline {
+  text-decoration: underline;
+  text-decoration-color: #ee9b3a;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
 }

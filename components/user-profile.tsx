@@ -28,6 +28,7 @@ export function UserProfile({ profile }: UserProfileProps) {
   const supabase = createClient()
 
   const handleSignOut = async () => {
+    console.log("[v0] Signing out user")
     await supabase.auth.signOut()
     router.push("/auth/login")
     router.refresh()
@@ -40,13 +41,21 @@ export function UserProfile({ profile }: UserProfileProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
+        <Button
+          variant="ghost"
+          className="relative h-10 w-10 rounded-full p-0 hover:opacity-80 transition-opacity"
+          onClick={() => console.log("[v0] Avatar clicked")}
+        >
           <Avatar className="h-10 w-10 bg-[#302831] border-2 border-[#EE9B3A]/30">
             <AvatarFallback className="bg-[#302831] text-[#EE9B3A] font-semibold text-lg">{initial}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56 border-[#EE9B3A]/30 rounded-lg bg-[#0B0A13] border" align="end" forceMount>
+      <DropdownMenuContent
+        className="w-56 bg-[#0B0A13] border-[#EE9B3A]/30 rounded-lg shadow-xl z-[9999]"
+        align="end"
+        sideOffset={8}
+      >
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none text-[#E7D1B1]">{profile.display_name}</p>
@@ -57,7 +66,10 @@ export function UserProfile({ profile }: UserProfileProps) {
         <DropdownMenuSeparator className="bg-[#302831]" />
         <DropdownMenuItem
           className="text-[#E7D1B1] hover:bg-[#302831] cursor-pointer focus:bg-[#302831] focus:text-[#E7D1B1]"
-          onClick={() => router.push("/profile")}
+          onClick={() => {
+            console.log("[v0] Navigating to profile")
+            router.push("/profile")
+          }}
         >
           <User className="mr-2 h-4 w-4 text-[#EE9B3A]" />
           <span>Ver Perfil</span>

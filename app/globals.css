@@ -123,3 +123,12 @@
   text-decoration-thickness: 2px;
   text-underline-offset: 4px;
 }
+
+/* Added dropdown menu z-index fix to ensure it appears above all other elements */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+}
+
+[data-slot="dropdown-menu-content"] {
+  z-index: 9999 !important;
+}

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { AdventureGrid } from "@/components/adventure-grid"
 import { CreateAdventureDialog } from "@/components/create-adventure-dialog"
 import { Button } from "@/components/ui/button"
+import { UserProfile } from "@/components/user-profile"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -30,11 +31,7 @@ export default async function DashboardPage() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-serif font-bold text-[#E7D1B1]">Map of Many Places</h1>
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-[#302831] border border-[#EE9B3A]/30 flex items-center justify-center">
-                <span className="text-[#EE9B3A] font-semibold">{profile?.display_name?.[0]?.toUpperCase() || "U"}</span>
-              </div>
-            </div>
+            <UserProfile profile={profile} />
           </div>
         </div>
       </header>

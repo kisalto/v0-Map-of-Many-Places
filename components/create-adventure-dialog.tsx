@@ -70,11 +70,15 @@ export function CreateAdventureDialog({ children }: CreateAdventureDialogProps) 
         .select()
         .single()
 
-      console.log("[v0] Insert result:", { data, error })
-
       if (error) {
-        console.error("[v0] Supabase error:", error)
-        throw error
+        console.error("[v0] Supabase error details:", {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          full: error,
+        })
+        throw new Error(error.message || "Erro ao criar aventura")
       }
 
       console.log("[v0] Adventure created successfully:", data)

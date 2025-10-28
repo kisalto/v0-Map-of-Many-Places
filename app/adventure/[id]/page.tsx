@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { AdventureHeader } from "@/components/adventure-header"
-import { TimelineCanvas } from "@/components/timeline-canvas"
-import { AdventureSidebar } from "@/components/adventure-sidebar"
+import { TrelloBoard } from "@/components/trello-board"
+import { TasksSidebar } from "@/components/tasks-sidebar"
 
 interface AdventurePageProps {
   params: Promise<{ id: string }>
@@ -17,69 +17,54 @@ export default async function AdventurePage({ params }: AdventurePageProps) {
     redirect("/auth/login")
   }
 
-  // Get adventure details
-  const { data: adventure, error: adventureError } = await supabase
-    .from("adventures")
-    .select("*")
-    .eq("id", id)
-    .eq("creator_id", data.user.id)
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, username, display_name, email")
+    .eq("id", data.user.id)
     .single()
+
+  const { data: adventure, error: adventureError } = await supabase.from("adventures").select("*").eq("id", id).single()
 
   if (adventureError || !adventure) {
     redirect("/dashboard")
   }
 
-  const { data: timelineData } = await supabase
+  const { data: membership } = await supabase
+    .from("adventure_members")
+    .select("role")
+    .eq("adventure_id", id)
+    .eq("profile_id", data.user.id)
+    .single()
+
+  if (!membership && adventure.creator_id !== data.user.id) {
+    redirect("/dashboard")
+  }
+
+  const { data: chapters } = await supabase
+    .from("chapters")
+    .select("*")
+    .eq("adventure_id", id)
+    .order("order_index", { ascending: true })
+
+  const { data: entries } = await supabase
     .from("timeline_entries")
     .select("*")
     .eq("adventure_id", id)
     .order("order_index", { ascending: true })
 
-  // Get profiles for timeline entries creators
-  let timelineEntries = timelineData || []
-  if (timelineData && timelineData.length > 0) {
-    const creatorIds = [...new Set(timelineData.map((entry) => entry.creator_id))]
-    const { data: profilesData } = await supabase.from("profiles").select("id, display_name").in("id", creatorIds)
-
-    // Combine timeline entries with profile data
-    timelineEntries = timelineData.map((entry) => ({
-      ...entry,
-      profiles: profilesData?.find((profile) => profile.id === entry.creator_id) || null,
-    }))
-  }
-
-  // Get NPCs
-  const { data: npcs } = await supabase.from("npcs").select("*").eq("adventure_id", id).order("created_at")
-
-  const { data: playersData } = await supabase
-    .from("adventure_players")
+  const { data: tasks } = await supabase
+    .from("tasks")
     .select("*")
     .eq("adventure_id", id)
-    .order("created_at")
-
-  // Get profiles for players
-  let players = playersData || []
-  if (playersData && playersData.length > 0) {
-    const playerProfileIds = [...new Set(playersData.map((player) => player.profile_id))]
-    const { data: playerProfilesData } = await supabase
-      .from("profiles")
-      .select("id, display_name")
-      .in("id", playerProfileIds)
-
-    // Combine players with profile data
-    players = playersData.map((player) => ({
-      ...player,
-      profiles: playerProfilesData?.find((profile) => profile.id === player.profile_id) || null,
-    }))
-  }
+    .order("order_index", { ascending: true })
 
   return (
     <div className="h-screen bg-[#0B0A13] flex flex-col">
-      <AdventureHeader adventure={adventure} />
+      <AdventureHeader adventure={adventure} profile={profile} />
       <div className="flex-1 flex overflow-hidden">
-        <AdventureSidebar adventure={adventure} npcs={npcs || []} players={players || []} />
-        <main className="flex-1 relative">
-          <TimelineCanvas adventureId={id} entries={timelineEntries || []} />
+        <TasksSidebar adventureId={id} tasks={tasks || []} />
+        <main className="flex-1 overflow-auto">
+          <TrelloBoard adventureId={id} chapters={chapters || []} entries={entries || []} />
         </main>
       </div>
     </div>

@@ -2,17 +2,10 @@
 
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { User, LogOut } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 interface UserProfileProps {
   profile: {
@@ -26,6 +19,7 @@ interface UserProfileProps {
 export function UserProfile({ profile }: UserProfileProps) {
   const router = useRouter()
   const supabase = createClient()
+  const [isOpen, setIsOpen] = useState(false)
 
   const handleSignOut = async () => {
     console.log("[v0] Signing out user")
@@ -39,50 +33,56 @@ export function UserProfile({ profile }: UserProfileProps) {
   const initial = profile.display_name?.[0]?.toUpperCase() || "U"
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="relative h-10 w-10 rounded-full p-0 hover:opacity-80 transition-opacity"
-          onClick={() => console.log("[v0] Avatar clicked")}
-        >
-          <Avatar className="h-10 w-10 bg-[#302831] border-2 border-[#EE9B3A]/30">
-            <AvatarFallback className="bg-[#302831] text-[#EE9B3A] font-semibold text-lg">{initial}</AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="w-56 bg-[#0B0A13] border-[#EE9B3A]/30 rounded-lg shadow-xl z-[9999]"
-        align="end"
-        sideOffset={8}
+    <div className="relative">
+      <Button
+        variant="ghost"
+        className="relative h-10 w-10 rounded-full p-0 hover:opacity-80 transition-opacity"
+        onClick={() => setIsOpen(!isOpen)}
       >
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none text-[#E7D1B1]">{profile.display_name}</p>
-            <p className="text-xs leading-none text-[#9F8475]">@{profile.username}</p>
-            <p className="text-xs leading-none text-[#9F8475]">{profile.email}</p>
+        <Avatar className="h-10 w-10 bg-[#302831] border-2 border-[#EE9B3A]/30">
+          <AvatarFallback className="bg-[#302831] text-[#EE9B3A] font-semibold text-lg">{initial}</AvatarFallback>
+        </Avatar>
+      </Button>
+
+      {isOpen && (
+        <>
+          {/* Overlay para fechar ao clicar fora */}
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+
+          {/* Menu dropdown */}
+          <div className="absolute right-0 top-12 w-56 bg-[#0B0A13] border border-[#EE9B3A]/30 rounded-lg shadow-xl z-50 overflow-hidden">
+            <div className="p-3 border-b border-[#302831]">
+              <p className="text-sm font-medium text-[#E7D1B1]">{profile.display_name}</p>
+              <p className="text-xs text-[#9F8475]">@{profile.username}</p>
+              <p className="text-xs text-[#9F8475]">{profile.email}</p>
+            </div>
+
+            <button
+              className="w-full px-3 py-2 text-left text-sm text-[#E7D1B1] hover:bg-[#302831] flex items-center gap-2 transition-colors"
+              onClick={() => {
+                setIsOpen(false)
+                router.push("/profile")
+              }}
+            >
+              <User className="h-4 w-4 text-[#EE9B3A]" />
+              <span>Ver Perfil</span>
+            </button>
+
+            <div className="border-t border-[#302831]" />
+
+            <button
+              className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-[#302831] flex items-center gap-2 transition-colors"
+              onClick={() => {
+                setIsOpen(false)
+                handleSignOut()
+              }}
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Sair</span>
+            </button>
           </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-[#302831]" />
-        <DropdownMenuItem
-          className="text-[#E7D1B1] hover:bg-[#302831] cursor-pointer focus:bg-[#302831] focus:text-[#E7D1B1]"
-          onClick={() => {
-            console.log("[v0] Navigating to profile")
-            router.push("/profile")
-          }}
-        >
-          <User className="mr-2 h-4 w-4 text-[#EE9B3A]" />
-          <span>Ver Perfil</span>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator className="bg-[#302831]" />
-        <DropdownMenuItem
-          className="text-red-400 hover:bg-[#302831] cursor-pointer focus:bg-[#302831] focus:text-red-400"
-          onClick={handleSignOut}
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Sair</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </>
+      )}
+    </div>
   )
 }

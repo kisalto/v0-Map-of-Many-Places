@@ -74,7 +74,7 @@ export default async function AdventurePage({ params }: AdventurePageProps) {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col">
+    <div className="h-screen bg-[#0B0A13] flex flex-col">
       <AdventureHeader adventure={adventure} />
       <div className="flex-1 flex overflow-hidden">
         <AdventureSidebar adventure={adventure} npcs={npcs || []} players={players || []} />

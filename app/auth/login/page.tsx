@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 export default function LoginPage() {
-  const [identifier, setIdentifier] = useState("") // Mudou de email para identifier (email ou username)
+  const [identifier, setIdentifier] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -26,34 +26,31 @@ export default function LoginPage() {
       const isEmail = identifier.includes("@")
 
       if (isEmail) {
-        // Login com email
         const { error } = await supabase.auth.signInWithPassword({
           email: identifier,
           password,
         })
         if (error) throw error
       } else {
-        // Login com username - busca o email primeiro
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("email")
-          .eq("username", identifier)
-          .single()
+        const { data: emailData, error: emailError } = await supabase.rpc("get_email_by_username", {
+          username_input: identifier,
+        })
 
-        if (profileError || !profile) {
+        if (emailError || !emailData) {
           throw new Error("Nome de usuário não encontrado")
         }
 
         const { error } = await supabase.auth.signInWithPassword({
-          email: profile.email,
+          email: emailData,
           password,
         })
         if (error) throw error
       }
 
       router.push("/dashboard")
+      router.refresh()
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
+      setError(error instanceof Error ? error.message : "Erro ao fazer login")
     } finally {
       setIsLoading(false)
     }
@@ -76,12 +73,12 @@ export default function LoginPage() {
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="identifier" className="text-[#E7D1B1]">
-                  Email ou Nome de Usuário
+                  Email ou Nome de Login
                 </Label>
                 <Input
                   id="identifier"
                   type="text"
-                  placeholder="explorador@aventura.com ou meuusername"
+                  placeholder="explorador@aventura.com ou meulogin"
                   required
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}

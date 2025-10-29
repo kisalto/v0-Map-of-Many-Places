@@ -2,76 +2,87 @@
 
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { User, LogOut, Settings } from "lucide-react"
+import { User, LogOut } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 interface UserProfileProps {
   profile: {
     id: string
+    username: string
     display_name: string
     email: string
-    role: string
   } | null
 }
 
 export function UserProfile({ profile }: UserProfileProps) {
   const router = useRouter()
   const supabase = createClient()
+  const [isOpen, setIsOpen] = useState(false)
 
   const handleSignOut = async () => {
+    console.log("[v0] Signing out user")
     await supabase.auth.signOut()
     router.push("/auth/login")
+    router.refresh()
   }
 
   if (!profile) return null
 
-  const initials = profile.display_name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
+  const initial = profile.display_name?.[0]?.toUpperCase() || "U"
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-          <Avatar className="h-10 w-10 bg-slate-700 border-2 border-amber-400/30">
-            <AvatarFallback className="bg-slate-700 text-amber-400 font-semibold">{initials}</AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56 border-chart-5 border rounded-none bg-background" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none text-chart-1">{profile.display_name}</p>
-            <p className="text-xs leading-none text-slate-400">{profile.email}</p>
-            <p className="text-xs leading-none text-amber-400 capitalize">{profile.role}</p>
+    <div className="relative">
+      <Button
+        variant="ghost"
+        className="relative h-10 w-10 rounded-full p-0 hover:opacity-80 transition-opacity"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <Avatar className="h-10 w-10 bg-[#302831] border-2 border-[#EE9B3A]/30">
+          <AvatarFallback className="bg-[#302831] text-[#EE9B3A] font-semibold text-lg">{initial}</AvatarFallback>
+        </Avatar>
+      </Button>
+
+      {isOpen && (
+        <>
+          {/* Overlay para fechar ao clicar fora */}
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+
+          {/* Menu dropdown */}
+          <div className="absolute right-0 top-12 w-56 bg-[#0B0A13] border border-[#EE9B3A]/30 rounded-lg shadow-xl z-50 overflow-hidden">
+            <div className="p-3 border-b border-[#302831]">
+              <p className="text-sm font-medium text-[#E7D1B1]">{profile.display_name}</p>
+              <p className="text-xs text-[#9F8475]">@{profile.username}</p>
+              <p className="text-xs text-[#9F8475]">{profile.email}</p>
+            </div>
+
+            <button
+              className="w-full px-3 py-2 text-left text-sm text-[#E7D1B1] hover:bg-[#302831] flex items-center gap-2 transition-colors"
+              onClick={() => {
+                setIsOpen(false)
+                router.push("/profile")
+              }}
+            >
+              <User className="h-4 w-4 text-[#EE9B3A]" />
+              <span>Ver Perfil</span>
+            </button>
+
+            <div className="border-t border-[#302831]" />
+
+            <button
+              className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-[#302831] flex items-center gap-2 transition-colors"
+              onClick={() => {
+                setIsOpen(false)
+                handleSignOut()
+              }}
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Sair</span>
+            </button>
           </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-slate-700" />
-        <DropdownMenuItem className="text-slate-200 hover:bg-slate-700 cursor-pointer">
-          <User className="mr-2 h-4 w-4 text-chart-5" />
-          <span className="text-chart-5">Perfil</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem className="text-slate-200 hover:bg-slate-700 cursor-pointer">
-          <Settings className="mr-2 h-4 w-4 text-chart-5" />
-          <span className="text-chart-5">Configurações</span>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator className="bg-slate-700" />
-        <DropdownMenuItem className="text-red-400 hover:bg-slate-700 cursor-pointer" onClick={handleSignOut}>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Sair</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </>
+      )}
+    </div>
   )
 }

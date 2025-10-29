@@ -6,12 +6,13 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, display_name, role)
+  -- Updated to use new field names: username instead of role
+  INSERT INTO public.profiles (id, email, display_name, username)
   VALUES (
     NEW.id,
     NEW.email,
     COALESCE(NEW.raw_user_meta_data ->> 'display_name', SPLIT_PART(NEW.email, '@', 1)),
-    COALESCE(NEW.raw_user_meta_data ->> 'role', 'player')
+    COALESCE(NEW.raw_user_meta_data ->> 'username', LOWER(SPLIT_PART(NEW.email, '@', 1)))
   )
   ON CONFLICT (id) DO NOTHING;
   

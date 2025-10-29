@@ -42,13 +42,24 @@ export function CreateAdventureDialog({ children }: CreateAdventureDialogProps) 
     try {
       const supabase = createClient()
 
+      console.log("[v0] Starting adventure creation...")
+
       // Get current user
       const {
         data: { user },
       } = await supabase.auth.getUser()
+
+      console.log("[v0] Current user:", user?.id)
+
       if (!user) throw new Error("Usuário não autenticado")
 
       // Create adventure
+      console.log("[v0] Attempting to insert adventure:", {
+        title: title.trim(),
+        description: description.trim() || null,
+        creator_id: user.id,
+      })
+
       const { data, error } = await supabase
         .from("adventures")
         .insert({
@@ -59,7 +70,18 @@ export function CreateAdventureDialog({ children }: CreateAdventureDialogProps) 
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error("[v0] Supabase error details:", {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          full: error,
+        })
+        throw new Error(error.message || "Erro ao criar aventura")
+      }
+
+      console.log("[v0] Adventure created successfully:", data)
 
       // Reset form and close dialog
       setTitle("")
@@ -69,6 +91,7 @@ export function CreateAdventureDialog({ children }: CreateAdventureDialogProps) 
       // Refresh the page to show new adventure
       router.refresh()
     } catch (error: unknown) {
+      console.error("[v0] Error creating adventure:", error)
       setError(error instanceof Error ? error.message : "Erro ao criar aventura")
     } finally {
       setIsLoading(false)

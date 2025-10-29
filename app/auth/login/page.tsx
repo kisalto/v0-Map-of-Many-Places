@@ -77,7 +77,7 @@ export default function LoginPage() {
         if (!profileData || !profileData.email) {
           console.error("[v0] Username not found in profiles:", identifier)
           throw new Error(
-            "Nome de usuário não encontrado. Tente usar seu email para fazer login ou crie uma nova conta.",
+            "Nome de usuário não encontrado. Por favor, use seu EMAIL para fazer login pela primeira vez.",
           )
         }
 
@@ -118,6 +118,38 @@ export default function LoginPage() {
       }
 
       console.log("[v0] Login successful for user:", data.user.id)
+
+      console.log("[v0] Checking if profile exists...")
+      const { data: existingProfile, error: profileCheckError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", data.user.id)
+        .maybeSingle()
+
+      console.log("[v0] Profile check result:", {
+        exists: !!existingProfile,
+        error: profileCheckError?.message,
+      })
+
+      if (!existingProfile && !profileCheckError) {
+        console.log("[v0] Profile missing! Creating profile from user metadata...")
+        const username = data.user.user_metadata?.username || data.user.email?.split("@")[0] || "user"
+        const displayName = data.user.user_metadata?.display_name || username
+
+        const { error: createProfileError } = await supabase.from("profiles").insert({
+          id: data.user.id,
+          email: data.user.email!,
+          username: username,
+          display_name: displayName,
+        })
+
+        if (createProfileError) {
+          console.error("[v0] Failed to create missing profile:", createProfileError)
+        } else {
+          console.log("[v0] Profile created successfully during login")
+        }
+      }
+
       console.log("[v0] Redirecting to dashboard...")
       router.push("/dashboard")
       router.refresh()

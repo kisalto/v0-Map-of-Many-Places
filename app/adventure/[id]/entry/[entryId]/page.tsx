@@ -53,53 +53,11 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
 
       if (error) throw error
 
-      const { data: taskData } = await supabase.from("tasks").select("chapter_id, title").eq("id", entryId).single()
-
-      const { data: timelineEntryData } = await supabase
-        .from("timeline_entries")
-        .select("id")
-        .eq("chapter_id", taskData?.chapter_id)
-        .eq("title", taskData?.title)
-        .eq("is_task", true)
-        .single()
-
-      const timelineEntryId = timelineEntryData?.id || null
-
-      console.log("[v0] Found timeline_entry_id:", timelineEntryId)
-
-      if (!timelineEntryId && taskData) {
-        const { data: newTimelineEntry } = await supabase
-          .from("timeline_entries")
-          .insert({
-            adventure_id: adventureId,
-            chapter_id: taskData.chapter_id,
-            title: title.trim(),
-            content: content,
-            is_task: true,
-            order_index: 0,
-          })
-          .select()
-          .single()
-
-        console.log("[v0] Created new timeline_entry:", newTimelineEntry)
-
-        if (newTimelineEntry) {
-          await saveMentions(entryId, newTimelineEntry.id, content)
-        }
-      } else if (timelineEntryId) {
-        await supabase
-          .from("timeline_entries")
-          .update({ title: title.trim(), content: content })
-          .eq("id", timelineEntryId)
-
-        await saveMentions(entryId, timelineEntryId, content)
-      }
-
       setShowSaveConfirm(false)
       router.push(`/adventure/${adventureId}`)
       router.refresh()
     } catch (error) {
-      console.error("[v0] Error saving entry:", error)
+      console.error("Error saving entry:", error)
     } finally {
       setSaving(false)
     }
@@ -118,84 +76,9 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
       router.push(`/adventure/${adventureId}`)
       router.refresh()
     } catch (error) {
-      console.error("[v0] Error deleting entry:", error)
+      console.error("Error deleting entry:", error)
     } finally {
       setDeleting(false)
-    }
-  }
-
-  const extractMentions = (text: string, type: "character" | "region"): string[] => {
-    const prefix = type === "character" ? "@" : "#"
-    const regex = new RegExp(`${prefix}[^@#\\n.!?,;:]+`, "g")
-    const matches = text.match(regex)
-    return matches ? [...new Set(matches.map((m) => m.slice(1).trim()))] : []
-  }
-
-  const saveMentions = async (taskId: string, timelineEntryId: string, content: string) => {
-    const supabase = createClient()
-
-    await supabase.from("character_mentions").delete().eq("task_id", taskId)
-    await supabase.from("region_mentions").delete().eq("task_id", taskId)
-
-    const characterMentionNames = extractMentions(content, "character")
-    console.log("[v0] Extracted character mentions:", characterMentionNames)
-
-    if (characterMentionNames.length > 0) {
-      const { data: characters } = await supabase
-        .from("characters")
-        .select("id, name")
-        .eq("adventure_id", adventureId)
-        .in("name", characterMentionNames)
-
-      console.log("[v0] Found characters:", characters)
-
-      if (characters && characters.length > 0) {
-        const characterMentionsToInsert = characters.map((char) => ({
-          task_id: taskId,
-          timeline_entry_id: timelineEntryId,
-          character_id: char.id,
-          mention_text: char.name,
-          character_type: "character",
-        }))
-
-        console.log("[v0] Inserting character mentions:", characterMentionsToInsert)
-
-        const { error: charError } = await supabase.from("character_mentions").insert(characterMentionsToInsert)
-
-        if (charError) {
-          console.error("[v0] Error inserting character mentions:", charError)
-        }
-      }
-    }
-
-    const regionMentionNames = extractMentions(content, "region")
-    console.log("[v0] Extracted region mentions:", regionMentionNames)
-
-    if (regionMentionNames.length > 0) {
-      const { data: regions } = await supabase
-        .from("regions")
-        .select("id, name")
-        .eq("adventure_id", adventureId)
-        .in("name", regionMentionNames)
-
-      console.log("[v0] Found regions:", regions)
-
-      if (regions && regions.length > 0) {
-        const regionMentionsToInsert = regions.map((region) => ({
-          task_id: taskId,
-          timeline_entry_id: timelineEntryId,
-          region_id: region.id,
-          mention_text: region.name,
-        }))
-
-        console.log("[v0] Inserting region mentions:", regionMentionsToInsert)
-
-        const { error: regionError } = await supabase.from("region_mentions").insert(regionMentionsToInsert)
-
-        if (regionError) {
-          console.error("[v0] Error inserting region mentions:", regionError)
-        }
-      }
     }
   }
 
@@ -262,7 +145,7 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
               <strong className="text-[#EE9B3A]">Dica:</strong> Use @ para mencionar personagens (ex: @Strahd) e # para
               mencionar regiões (ex: #Barovia)
             </p>
-            <p>As menções aparecerão destacadas e serão vinculadas automaticamente.</p>
+            <p>As menções aparecerão destacadas no editor.</p>
           </div>
         </div>
       </main>

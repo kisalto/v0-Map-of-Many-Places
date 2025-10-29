@@ -141,30 +141,27 @@ export default function SignUpPage() {
 
       console.log("[v0] Signup successful for user:", data.user.id)
 
-      console.log("[v0] Creating profile manually...")
-      try {
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: data.user.id,
-          email: email,
-          username: loginName,
-          display_name: username,
-        })
+      console.log("[v0] Waiting for trigger to create profile...")
 
-        if (profileError) {
-          console.error("[v0] Profile creation error:", profileError)
-          // Se o profile já existe (trigger funcionou), não é um erro crítico
-          if (!profileError.message.includes("duplicate") && !profileError.message.includes("unique")) {
-            throw new Error("Erro ao criar perfil de usuário")
-          } else {
-            console.log("[v0] Profile already exists (trigger worked), continuing...")
-          }
+      // Aguardar 2 segundos para o trigger executar
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+
+      // Verificar se o profile foi criado (opcional, apenas para debug)
+      try {
+        const { data: profileData, error: profileCheckError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", data.user.id)
+          .single()
+
+        if (profileCheckError || !profileData) {
+          console.warn("[v0] Profile not found after trigger execution:", profileCheckError?.message)
+          console.warn("[v0] User may need to logout and login again for profile to be created")
         } else {
-          console.log("[v0] Profile created successfully")
+          console.log("[v0] Profile created successfully by trigger")
         }
-      } catch (profileError) {
-        console.error("[v0] Failed to create profile:", profileError)
-        // Não bloquear o signup se o profile não for criado
-        // O usuário pode tentar fazer login e o sistema tentará criar o profile novamente
+      } catch (checkError) {
+        console.warn("[v0] Could not verify profile creation:", checkError)
       }
 
       console.log("[v0] Redirecting to signup success page...")

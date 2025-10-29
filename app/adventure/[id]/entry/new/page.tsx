@@ -46,26 +46,92 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
 
       const nextOrderIndex = existingTasks && existingTasks.length > 0 ? existingTasks[0].order_index + 1 : 0
 
-      const { error } = await supabase.from("tasks").insert({
-        adventure_id: adventureId,
-        chapter_id: chapterId,
-        title: title.trim(),
-        content: content,
-        status: "pending",
-        order_index: nextOrderIndex,
-        completed: false,
-      })
+      const { data: newTask, error: taskError } = await supabase
+        .from("tasks")
+        .insert({
+          adventure_id: adventureId,
+          chapter_id: chapterId,
+          title: title.trim(),
+          content: content,
+          status: "pending",
+          order_index: nextOrderIndex,
+          completed: false,
+        })
+        .select()
+        .single()
 
-      if (error) {
-        console.error("[v0] Error creating entry:", error)
+      if (taskError) {
+        console.error("Error creating task:", taskError)
         return
+      }
+
+      const { data: timelineEntry, error: timelineError } = await supabase
+        .from("timeline_entries")
+        .insert({
+          adventure_id: adventureId,
+          chapter_id: chapterId,
+          title: title.trim(),
+          content: content,
+          is_task: true,
+          order_index: nextOrderIndex,
+          creator_id: "00000000-0000-0000-0000-000000000000",
+        })
+        .select()
+        .single()
+
+      if (timelineError) {
+        console.error("Error creating timeline_entry:", timelineError)
+        return
+      }
+
+      const characterMentions = content.match(/@[^\s@#]+/g) || []
+      const regionMentions = content.match(/#[^\s@#]+/g) || []
+
+      if (characterMentions.length > 0) {
+        const characterNames = characterMentions.map((m) => m.slice(1))
+        const { data: characters } = await supabase
+          .from("characters")
+          .select("id, name")
+          .eq("adventure_id", adventureId)
+          .in("name", characterNames)
+
+        if (characters && characters.length > 0) {
+          const mentionsToInsert = characters.map((char) => ({
+            timeline_entry_id: timelineEntry.id,
+            task_id: newTask.id,
+            character_id: char.id,
+            mention_text: `@${char.name}`,
+          }))
+
+          await supabase.from("character_mentions").insert(mentionsToInsert)
+        }
+      }
+
+      if (regionMentions.length > 0) {
+        const regionNames = regionMentions.map((m) => m.slice(1))
+        const { data: regions } = await supabase
+          .from("regions")
+          .select("id, name")
+          .eq("adventure_id", adventureId)
+          .in("name", regionNames)
+
+        if (regions && regions.length > 0) {
+          const mentionsToInsert = regions.map((region) => ({
+            timeline_entry_id: timelineEntry.id,
+            task_id: newTask.id,
+            region_id: region.id,
+            mention_text: `#${region.name}`,
+          }))
+
+          await supabase.from("region_mentions").insert(mentionsToInsert)
+        }
       }
 
       setShowSaveConfirm(false)
       router.push(`/adventure/${adventureId}`)
       router.refresh()
     } catch (error) {
-      console.error("[v0] Error saving entry:", error)
+      console.error("Error saving entry:", error)
     } finally {
       setSaving(false)
     }

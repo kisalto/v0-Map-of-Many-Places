@@ -168,16 +168,11 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
         image_url: imageUrl.trim() || null,
       }
 
-      console.log("[v0] Saving region with data:", data)
-
       let regionId: string
 
       if (region) {
         const { error } = await supabase.from("regions").update(data).eq("id", region.id)
-        if (error) {
-          console.error("[v0] Error updating region:", error)
-          throw error
-        }
+        if (error) throw error
         regionId = region.id
 
         const existingIds = subregions.filter((s) => !s.id.startsWith("temp-")).map((s) => s.id)
@@ -190,14 +185,8 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
         }
       } else {
         const { data: newRegion, error } = await supabase.from("regions").insert(data).select().single()
-        if (error) {
-          console.error("[v0] Error creating region:", error)
-          throw error
-        }
-        console.log("[v0] Region created:", newRegion)
-        if (!newRegion) {
-          throw new Error("Failed to create region - no data returned")
-        }
+        if (error) throw error
+        if (!newRegion) throw new Error("Failed to create region")
         regionId = newRegion.id
       }
 
@@ -211,16 +200,14 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
 
       if (newSubregions.length > 0) {
         const { error: subError } = await supabase.from("subregions").insert(newSubregions)
-        if (subError) {
-          console.error("[v0] Error creating subregions:", subError)
-        }
+        if (subError) console.error("[v0] Error creating subregions:", subError)
       }
 
       onSuccess()
       onOpenChange(false)
     } catch (error) {
       console.error("[v0] Error saving region:", error)
-      alert("Erro ao salvar região. Verifique o console para mais detalhes.")
+      alert("Erro ao salvar região")
     } finally {
       setSaving(false)
     }

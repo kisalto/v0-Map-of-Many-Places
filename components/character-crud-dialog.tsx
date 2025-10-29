@@ -8,8 +8,6 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
 import { ImageUpload } from "@/components/image-upload"
-import { Separator } from "@/components/ui/separator"
-import { Link2, RefreshCw } from "lucide-react"
 
 interface Character {
   id: string
@@ -39,119 +37,20 @@ export function CharacterCrudDialog({
   const [history, setHistory] = useState("")
   const [imageUrl, setImageUrl] = useState("")
   const [saving, setSaving] = useState(false)
-  const [mentions, setMentions] = useState<any[]>([])
-  const [loadingMentions, setLoadingMentions] = useState(false)
-  const [allCharacters, setAllCharacters] = useState<any[]>([])
 
   useEffect(() => {
     if (open && character) {
-      console.log("[v0] Dialog opened with character:", character)
       setName(character.name)
       setShortDescription(character.short_description || "")
       setHistory(character.history || "")
       setImageUrl(character.image_url || "")
-      loadMentions(character.id)
     } else if (open && !character) {
-      console.log("[v0] Dialog opened for new character")
       setName("")
       setShortDescription("")
       setHistory("")
       setImageUrl("")
-      setMentions([])
-      loadAllCharacters()
     }
   }, [character, open])
-
-  const loadMentions = async (characterId: string) => {
-    setLoadingMentions(true)
-    try {
-      const supabase = createClient()
-
-      console.log("[v0] ========== LOADING MENTIONS ==========")
-      console.log("[v0] Character ID:", characterId)
-
-      const { data: mentionsData, error } = await supabase
-        .from("character_mentions")
-        .select("id, task_id, mention_text, created_at")
-        .eq("character_id", characterId)
-        .order("created_at", { ascending: false })
-
-      console.log("[v0] Character mentions query result:")
-      console.log("  - Data:", mentionsData)
-      console.log("  - Error:", error)
-      console.log("  - Count:", mentionsData?.length || 0)
-
-      if (error) {
-        console.error("[v0] Error loading mentions:", error)
-        setMentions([])
-        return
-      }
-
-      if (mentionsData && mentionsData.length > 0) {
-        const taskIds = mentionsData.map((m) => m.task_id).filter(Boolean)
-
-        console.log("[v0] Task IDs from mentions:", taskIds)
-
-        if (taskIds.length > 0) {
-          const { data: tasksData, error: tasksError } = await supabase
-            .from("tasks")
-            .select("id, title, created_at")
-            .in("id", taskIds)
-
-          console.log("[v0] Tasks query result:")
-          console.log("  - Data:", tasksData)
-          console.log("  - Error:", tasksError)
-
-          const mentionsWithTasks = mentionsData.map((mention) => ({
-            ...mention,
-            task: tasksData?.find((t) => t.id === mention.task_id),
-          }))
-
-          console.log("[v0] Final mentions with tasks:", mentionsWithTasks)
-
-          setMentions(mentionsWithTasks)
-        } else {
-          console.log("[v0] No task IDs found in mentions")
-          setMentions([])
-        }
-      } else {
-        console.log("[v0] No mentions found for this character")
-        setMentions([])
-      }
-      console.log("[v0] ========== END LOADING MENTIONS ==========")
-    } catch (error) {
-      console.error("[v0] Error loading mentions:", error)
-      setMentions([])
-    } finally {
-      setLoadingMentions(false)
-    }
-  }
-
-  const loadAllCharacters = async () => {
-    try {
-      const supabase = createClient()
-
-      console.log("[v0] ========== LOADING ALL CHARACTERS ==========")
-
-      const { data: allCharsData, error: allCharsError } = await supabase
-        .from("characters")
-        .select("id, name")
-        .eq("adventure_id", adventureId)
-
-      console.log("[v0] All characters in database:", allCharsData, "Error:", allCharsError)
-
-      if (allCharsError) {
-        console.error("[v0] Error loading all characters:", allCharsError)
-        setAllCharacters([])
-        return
-      }
-
-      setAllCharacters(allCharsData || [])
-    } catch (error) {
-      console.error("[v0] Error loading all characters:", error)
-      setAllCharacters([])
-    }
-  }
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -250,62 +149,6 @@ export function CharacterCrudDialog({
               className="bg-[#0B0A13] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475] resize-none"
             />
           </div>
-
-          {/* Mentions Section */}
-          {character && (
-            <>
-              <Separator className="bg-[#302831]" />
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Link2 className="h-4 w-4 text-[#60A5FA]" />
-                    <Label className="text-[#E7D1B1]">Aparições</Label>
-                  </div>
-                  <Button
-                    onClick={() => loadMentions(character.id)}
-                    variant="ghost"
-                    size="sm"
-                    className="text-[#60A5FA] hover:text-[#60A5FA]/80 hover:bg-[#60A5FA]/10"
-                  >
-                    <RefreshCw className="h-3 w-3 mr-1" />
-                    Recarregar
-                  </Button>
-                </div>
-
-                {loadingMentions ? (
-                  <p className="text-[#9F8475] text-sm">Carregando aparições...</p>
-                ) : mentions.length > 0 ? (
-                  <div className="space-y-2">
-                    {mentions.map((mention) => (
-                      <div
-                        key={mention.id}
-                        className="p-3 bg-[#0B0A13] rounded-lg border border-[#302831] hover:border-[#60A5FA]/30 transition-colors"
-                      >
-                        <p className="text-[#E7D1B1] font-medium text-sm">
-                          {mention.task?.title || "Anotação sem título"}
-                        </p>
-                        <p className="text-[#60A5FA] text-xs mt-1">@{mention.mention_text}</p>
-                        <p className="text-[#9F8475] text-xs mt-1">
-                          {new Date(mention.created_at).toLocaleDateString("pt-BR", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                          })}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <p className="text-[#9F8475] text-sm">Nenhuma aparição registrada.</p>
-                    <p className="text-[#9F8475] text-xs">
-                      Verifique o console do navegador (F12) para logs de debug detalhados.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-[#302831]">

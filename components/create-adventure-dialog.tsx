@@ -87,7 +87,7 @@ export function CreateAdventureDialog({ children }: CreateAdventureDialogProps) 
       const { error: memberError } = await supabase.from("adventure_members").insert({
         adventure_id: data.id,
         profile_id: user.id,
-        role: "dm", // Dungeon Master / Game Master
+        role: "owner", // Owner of the adventure
       })
 
       if (memberError) {

@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import { CharacterCrudDialog } from "@/components/character-crud-dialog"
 
 interface NPC {
   id: string
@@ -240,6 +241,17 @@ export function CharactersView({ adventure, npcs, players }: CharactersViewProps
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Character creation dialog */}
+      <CharacterCrudDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        adventureId={adventure.id}
+        onSuccess={() => {
+          setShowCreateDialog(false)
+          router.refresh()
+        }}
+      />
     </main>
   )
 }

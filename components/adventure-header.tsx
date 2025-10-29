@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import { ConfirmationDialog } from "@/components/confirmation-dialog"
 
 interface Adventure {
   id: string
@@ -36,6 +37,10 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
   const [inviteEmail, setInviteEmail] = useState("")
   const [isInviting, setIsInviting] = useState(false)
   const [isDeactivating, setIsDeactivating] = useState(false)
+  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false)
+  const [showInviteSuccess, setShowInviteSuccess] = useState(false)
+  const [showInviteError, setShowInviteError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
   const router = useRouter()
 
   const isActive = adventure.is_active !== false
@@ -59,7 +64,8 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
         .single()
 
       if (!invitedProfile) {
-        alert("Usuário não encontrado com este email")
+        setErrorMessage("Usuário não encontrado com este email")
+        setShowInviteError(true)
         return
       }
 
@@ -69,34 +75,33 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
         role: "player",
       })
 
-      alert("Convite enviado com sucesso!")
+      setShowInviteSuccess(true)
       setInviteEmail("")
-      setShowSettings(false)
       router.refresh()
     } catch (error) {
       console.error("Erro ao convidar:", error)
-      alert("Erro ao enviar convite")
+      setErrorMessage("Erro ao enviar convite")
+      setShowInviteError(true)
     } finally {
       setIsInviting(false)
     }
   }
 
   const handleDeactivate = async () => {
-    if (!confirm("Tem certeza que deseja desativar esta campanha?")) return
-
     setIsDeactivating(true)
     try {
       const supabase = createClient()
 
       await supabase.from("adventures").update({ is_active: false }).eq("id", adventure.id)
 
-      alert("Campanha desativada com sucesso!")
+      setShowDeactivateConfirm(false)
       setShowSettings(false)
       router.push("/dashboard")
       router.refresh()
     } catch (error) {
       console.error("Erro ao desativar:", error)
-      alert("Erro ao desativar campanha")
+      setErrorMessage("Erro ao desativar campanha")
+      setShowInviteError(true)
     } finally {
       setIsDeactivating(false)
     }
@@ -133,7 +138,7 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
                     size="sm"
                     className={`${
                       isTimelinePage
-                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none bg-transparent"
+                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none bg-transparent hover:bg-transparent"
                         : "text-[#E7D1B1] hover:text-[#EE9B3A] hover:bg-[#302831]"
                     }`}
                   >
@@ -147,7 +152,7 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
                     size="sm"
                     className={`${
                       isCharactersPage
-                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none bg-transparent"
+                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none bg-transparent hover:bg-transparent"
                         : "text-[#E7D1B1] hover:text-[#EE9B3A] hover:bg-[#302831]"
                     }`}
                   >
@@ -161,7 +166,7 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
                     size="sm"
                     className={`${
                       isRegionsPage
-                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none bg-transparent"
+                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none bg-transparent hover:bg-transparent"
                         : "text-[#E7D1B1] hover:text-[#EE9B3A] hover:bg-[#302831]"
                     }`}
                   >
@@ -175,7 +180,7 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
                     size="sm"
                     className={`${
                       isSearchPage
-                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none bg-transparent"
+                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none bg-transparent hover:bg-transparent"
                         : "text-[#E7D1B1] hover:text-[#EE9B3A] hover:bg-[#302831]"
                     }`}
                   >
@@ -236,39 +241,7 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
                   className="bg-[#0B0A13] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475]"
                 />
                 <Button
-                  onClick={async () => {
-                    if (!inviteEmail.trim()) return
-                    setIsInviting(true)
-                    try {
-                      const supabase = createClient()
-                      const { data: invitedProfile } = await supabase
-                        .from("profiles")
-                        .select("id")
-                        .eq("email", inviteEmail.trim())
-                        .single()
-
-                      if (!invitedProfile) {
-                        alert("Usuário não encontrado com este email")
-                        return
-                      }
-
-                      await supabase.from("adventure_members").insert({
-                        adventure_id: adventure.id,
-                        profile_id: invitedProfile.id,
-                        role: "player",
-                      })
-
-                      alert("Convite enviado com sucesso!")
-                      setInviteEmail("")
-                      setShowSettings(false)
-                      router.refresh()
-                    } catch (error) {
-                      console.error("Erro ao convidar:", error)
-                      alert("Erro ao enviar convite")
-                    } finally {
-                      setIsInviting(false)
-                    }
-                  }}
+                  onClick={handleInvite}
                   disabled={isInviting || !inviteEmail.trim()}
                   className="bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13]"
                 >
@@ -281,7 +254,7 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
             <div className="space-y-3 pt-4 border-t border-[#302831]">
               <Label className="text-[#E7D1B1]">Zona de Perigo</Label>
               <Button
-                onClick={handleDeactivate}
+                onClick={() => setShowDeactivateConfirm(true)}
                 disabled={isDeactivating}
                 variant="outline"
                 className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10 bg-transparent"
@@ -293,6 +266,36 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ConfirmationDialog
+        open={showDeactivateConfirm}
+        onOpenChange={setShowDeactivateConfirm}
+        title="Desativar Campanha?"
+        description="Tem certeza que deseja desativar esta campanha? Você não poderá criar ou editar conteúdo, mas ainda poderá visualizar."
+        confirmText="Desativar"
+        cancelText="Cancelar"
+        onConfirm={handleDeactivate}
+        variant="destructive"
+      />
+
+      <ConfirmationDialog
+        open={showInviteSuccess}
+        onOpenChange={setShowInviteSuccess}
+        title="Convite Enviado!"
+        description="O convite foi enviado com sucesso. O usuário agora tem acesso à campanha."
+        confirmText="OK"
+        onConfirm={() => setShowInviteSuccess(false)}
+      />
+
+      <ConfirmationDialog
+        open={showInviteError}
+        onOpenChange={setShowInviteError}
+        title="Erro"
+        description={errorMessage}
+        confirmText="OK"
+        onConfirm={() => setShowInviteError(false)}
+        variant="destructive"
+      />
     </>
   )
 }

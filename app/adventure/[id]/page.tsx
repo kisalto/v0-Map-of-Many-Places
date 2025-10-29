@@ -46,12 +46,6 @@ export default async function AdventurePage({ params }: AdventurePageProps) {
     .eq("adventure_id", id)
     .order("order_index", { ascending: true })
 
-  const { data: entries } = await supabase
-    .from("timeline_entries")
-    .select("*")
-    .eq("adventure_id", id)
-    .order("order_index", { ascending: true })
-
   const { data: tasks } = await supabase
     .from("tasks")
     .select("*")
@@ -64,7 +58,7 @@ export default async function AdventurePage({ params }: AdventurePageProps) {
       <div className="flex-1 flex overflow-hidden">
         <TasksSidebar adventureId={id} tasks={tasks || []} />
         <main className="flex-1 overflow-auto">
-          <TrelloBoard adventureId={id} chapters={chapters || []} entries={entries || []} />
+          <TrelloBoard adventureId={id} chapters={chapters || []} entries={tasks || []} />
         </main>
       </div>
     </div>

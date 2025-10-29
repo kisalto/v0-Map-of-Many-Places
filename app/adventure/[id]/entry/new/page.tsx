@@ -7,6 +7,7 @@ import { ArrowLeft, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { RichTextEditor } from "@/components/rich-text-editor"
+import { ConfirmationDialog } from "@/components/confirmation-dialog"
 
 export default function NewEntryPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -18,6 +19,7 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
   const [content, setContent] = useState("")
   const [saving, setSaving] = useState(false)
   const [adventure, setAdventure] = useState<any>(null)
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false)
 
   useEffect(() => {
     const loadAdventure = async () => {
@@ -46,7 +48,6 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
 
       const nextOrderIndex = existingTasks && existingTasks.length > 0 ? existingTasks[0].order_index + 1 : 0
 
-      // Create the entry
       const { data: entry, error } = await supabase
         .from("tasks")
         .insert({
@@ -63,7 +64,6 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
 
       if (error) {
         console.error("[v0] Error creating entry:", error)
-        alert(`Erro ao salvar: ${error.message}`)
         return
       }
 
@@ -72,32 +72,31 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
       const characterMentions = extractMentions(content, "character")
       if (characterMentions.length > 0) {
         console.log("[v0] Saving character mentions:", characterMentions)
-        const { error: mentionsError } = await supabase.from("character_mentions").insert(
+        await supabase.from("character_mentions").insert(
           characterMentions.map((name) => ({
             task_id: entry.id,
             mention_text: name,
             character_type: "npc",
           })),
         )
-        if (mentionsError) console.error("[v0] Error saving character mentions:", mentionsError)
       }
 
       const regionMentions = extractMentions(content, "region")
       if (regionMentions.length > 0) {
         console.log("[v0] Saving region mentions:", regionMentions)
-        const { error: mentionsError } = await supabase.from("region_mentions").insert(
+        await supabase.from("region_mentions").insert(
           regionMentions.map((name) => ({
             task_id: entry.id,
             mention_text: name,
           })),
         )
-        if (mentionsError) console.error("[v0] Error saving region mentions:", mentionsError)
       }
 
+      setShowSaveConfirm(false)
       router.push(`/adventure/${adventureId}`)
+      router.refresh()
     } catch (error) {
       console.error("[v0] Error saving entry:", error)
-      alert("Erro ao salvar anotação")
     } finally {
       setSaving(false)
     }
@@ -129,12 +128,12 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
             <h1 className="text-xl font-serif text-[#E7D1B1]">{adventure?.title || "Carregando..."}</h1>
           </div>
           <Button
-            onClick={handleSave}
+            onClick={() => setShowSaveConfirm(true)}
             disabled={!title.trim() || saving}
             className="bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13] font-medium"
           >
             <Save className="h-4 w-4 mr-2" />
-            {saving ? "Salvando..." : "Salvar Anotação"}
+            Salvar Anotação
           </Button>
         </div>
       </header>
@@ -163,6 +162,16 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
           </div>
         </div>
       </main>
+
+      <ConfirmationDialog
+        open={showSaveConfirm}
+        onOpenChange={setShowSaveConfirm}
+        title="Salvar Anotação?"
+        description="Deseja salvar esta anotação? Ela será adicionada ao capítulo selecionado."
+        confirmText="Salvar"
+        cancelText="Cancelar"
+        onConfirm={handleSave}
+      />
     </div>
   )
 }

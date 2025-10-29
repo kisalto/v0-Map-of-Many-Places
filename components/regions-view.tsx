@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import { RegionCrudDialog } from "@/components/region-crud-dialog"
 
 interface PointOfInterest {
   id: string
@@ -205,6 +206,17 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Modal de criação de região */}
+      <RegionCrudDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        adventureId={adventure.id}
+        onSuccess={() => {
+          setShowCreateDialog(false)
+          router.refresh()
+        }}
+      />
     </main>
   )
 }

@@ -7,6 +7,7 @@ import { ArrowLeft, Save, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { RichTextEditor } from "@/components/rich-text-editor"
+import { ConfirmationDialog } from "@/components/confirmation-dialog"
 
 export default function EditEntryPage({ params }: { params: { id: string; entryId: string } }) {
   const router = useRouter()
@@ -18,16 +19,16 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
   const [deleting, setDeleting] = useState(false)
   const [adventure, setAdventure] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   useEffect(() => {
     const loadData = async () => {
       const supabase = createClient()
 
-      // Load adventure
       const { data: adventureData } = await supabase.from("adventures").select("*").eq("id", adventureId).single()
       setAdventure(adventureData)
 
-      // Load entry
       const { data: entryData } = await supabase.from("tasks").select("*").eq("id", entryId).single()
 
       if (entryData) {
@@ -48,16 +49,13 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
     const supabase = createClient()
 
     try {
-      // Update the entry
       const { error } = await supabase.from("tasks").update({ title: title.trim(), content: content }).eq("id", entryId)
 
       if (error) throw error
 
-      // Delete old mentions
       await supabase.from("character_mentions").delete().eq("task_id", entryId)
       await supabase.from("region_mentions").delete().eq("task_id", entryId)
 
-      // Extract and save new character mentions
       const characterMentions = extractMentions(content, "character")
       if (characterMentions.length > 0) {
         await supabase.from("character_mentions").insert(
@@ -68,7 +66,6 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
         )
       }
 
-      // Extract and save new region mentions
       const regionMentions = extractMentions(content, "region")
       if (regionMentions.length > 0) {
         await supabase.from("region_mentions").insert(
@@ -79,18 +76,17 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
         )
       }
 
+      setShowSaveConfirm(false)
       router.push(`/adventure/${adventureId}`)
+      router.refresh()
     } catch (error) {
       console.error("[v0] Error saving entry:", error)
-      alert("Erro ao salvar anotação")
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async () => {
-    if (!confirm("Tem certeza que deseja deletar esta anotação?")) return
-
     setDeleting(true)
     const supabase = createClient()
 
@@ -99,10 +95,11 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
 
       if (error) throw error
 
+      setShowDeleteConfirm(false)
       router.push(`/adventure/${adventureId}`)
+      router.refresh()
     } catch (error) {
       console.error("[v0] Error deleting entry:", error)
-      alert("Erro ao deletar anotação")
     } finally {
       setDeleting(false)
     }
@@ -125,7 +122,6 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
 
   return (
     <div className="min-h-screen bg-[#0B0A13] text-white">
-      {/* Header */}
       <header className="border-b border-[#302831] bg-[#0B0A13]/95 backdrop-blur sticky top-0 z-50">
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-4">
@@ -143,30 +139,28 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
           </div>
           <div className="flex items-center gap-2">
             <Button
-              onClick={handleDelete}
+              onClick={() => setShowDeleteConfirm(true)}
               disabled={deleting}
               variant="ghost"
               className="text-red-400 hover:text-red-300 hover:bg-red-950/20"
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              {deleting ? "Deletando..." : "Deletar"}
+              Deletar
             </Button>
             <Button
-              onClick={handleSave}
+              onClick={() => setShowSaveConfirm(true)}
               disabled={!title.trim() || saving}
               className="bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13] font-medium"
             >
               <Save className="h-4 w-4 mr-2" />
-              {saving ? "Salvando..." : "Salvar"}
+              Salvar
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Editor */}
       <main className="max-w-5xl mx-auto px-6 py-8">
         <div className="space-y-6">
-          {/* Title Input */}
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -174,10 +168,8 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
             className="text-3xl font-serif border-none bg-transparent text-[#E7D1B1] placeholder:text-[#302831] focus-visible:ring-0 px-0"
           />
 
-          {/* Rich Text Editor */}
           <RichTextEditor value={content} onChange={setContent} adventureId={adventureId} />
 
-          {/* Help Text */}
           <div className="text-sm text-[#9F8475] space-y-1 pt-4 border-t border-[#302831]">
             <p>
               <strong className="text-[#EE9B3A]">Dica:</strong> Use @ para mencionar personagens (ex: @Strahd) e # para
@@ -187,6 +179,27 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
           </div>
         </div>
       </main>
+
+      <ConfirmationDialog
+        open={showSaveConfirm}
+        onOpenChange={setShowSaveConfirm}
+        title="Salvar Alterações?"
+        description="Deseja salvar as alterações feitas nesta anotação?"
+        confirmText="Salvar"
+        cancelText="Cancelar"
+        onConfirm={handleSave}
+      />
+
+      <ConfirmationDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="Deletar Anotação?"
+        description="Tem certeza que deseja deletar esta anotação? Esta ação não pode ser desfeita."
+        confirmText="Deletar"
+        cancelText="Cancelar"
+        onConfirm={handleDelete}
+        variant="destructive"
+      />
     </div>
   )
 }

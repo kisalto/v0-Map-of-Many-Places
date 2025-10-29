@@ -1,11 +1,22 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Plus, Trash2, X, Edit2 } from "lucide-react"
+import { Search, Plus, Trash2, X, Edit2, Check } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { RegionCrudDialog } from "@/components/region-crud-dialog"
@@ -42,27 +53,26 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
   const [editingRegion, setEditingRegion] = useState<Region | null>(null)
   const [mentions, setMentions] = useState<any[]>([])
   const [subregions, setSubregions] = useState<Subregion[]>([])
+  const [isDeleteMode, setIsDeleteMode] = useState(false)
+  const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(new Set())
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const router = useRouter()
 
   const isActive = adventure.is_active !== false
 
-  // Filter regions based on search
   const filteredRegions = regions.filter((region) => region.name.toLowerCase().includes(searchQuery.toLowerCase()))
 
-  // Load mentions and subregions when region is selected
   const handleSelectRegion = async (region: Region) => {
     setSelectedRegion(region)
 
     const supabase = createClient()
 
-    // Load mentions
     const { data: mentionsData } = await supabase
       .from("region_mentions")
       .select("*, tasks(*)")
       .eq("region_name", region.name)
     setMentions(mentionsData || [])
 
-    // Load subregions
     const { data: subregionsData } = await supabase
       .from("subregions")
       .select("*")
@@ -76,9 +86,41 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
     setSelectedRegion(null)
   }
 
+  const handleToggleDeleteMode = () => {
+    setIsDeleteMode(!isDeleteMode)
+    setSelectedForDeletion(new Set())
+  }
+
+  const handleToggleSelection = (regionId: string) => {
+    const newSelection = new Set(selectedForDeletion)
+    if (newSelection.has(regionId)) {
+      newSelection.delete(regionId)
+    } else {
+      newSelection.add(regionId)
+    }
+    setSelectedForDeletion(newSelection)
+  }
+
+  const handleConfirmDelete = async () => {
+    const supabase = createClient()
+
+    for (const regionId of selectedForDeletion) {
+      await supabase.from("regions").delete().eq("id", regionId)
+    }
+
+    setIsDeleteMode(false)
+    setSelectedForDeletion(new Set())
+    setShowDeleteConfirm(false)
+    router.refresh()
+  }
+
+  const handleCancelDelete = () => {
+    setIsDeleteMode(false)
+    setSelectedForDeletion(new Set())
+  }
+
   return (
     <main className="container mx-auto px-6 py-8">
-      {/* Header with search and actions */}
       <div className="flex items-center justify-between mb-8">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9F8475]" />
@@ -90,35 +132,68 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
           />
         </div>
         <div className="flex gap-2">
-          <Button
-            onClick={() => setShowCreateDialog(true)}
-            disabled={!isActive}
-            className="bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13]"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Região
-          </Button>
-          <Button
-            disabled={!isActive}
-            variant="outline"
-            className="border-[#EE9B3A]/30 text-[#EE9B3A] hover:bg-[#EE9B3A]/10 bg-transparent"
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Remover Região
-          </Button>
+          {!isDeleteMode ? (
+            <>
+              <Button
+                onClick={() => setShowCreateDialog(true)}
+                disabled={!isActive}
+                className="bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13]"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Região
+              </Button>
+              <Button
+                onClick={handleToggleDeleteMode}
+                disabled={!isActive}
+                variant="outline"
+                className="border-[#EE9B3A]/30 text-[#EE9B3A] hover:bg-[#EE9B3A]/10 bg-transparent"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Remover Região
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                onClick={handleCancelDelete}
+                variant="outline"
+                className="border-[#302831] text-[#E7D1B1] hover:bg-[#302831] bg-transparent"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Cancelar
+              </Button>
+              <Button
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={selectedForDeletion.size === 0}
+                className="bg-red-500 hover:bg-red-600 text-white"
+              >
+                <Check className="h-4 w-4 mr-2" />
+                Confirmar ({selectedForDeletion.size})
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Regions grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filteredRegions.map((region) => (
           <Card
             key={region.id}
-            onClick={() => handleSelectRegion(region)}
-            className="bg-[#302831] border-[#EE9B3A]/30 hover:bg-[#302831]/80 transition-all cursor-pointer group overflow-hidden"
+            onClick={() => !isDeleteMode && handleSelectRegion(region)}
+            className="bg-[#302831] border-[#EE9B3A]/30 hover:bg-[#302831]/80 transition-all cursor-pointer group overflow-hidden relative"
           >
+            {isDeleteMode && (
+              <div
+                className="absolute top-4 left-4 z-10"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleToggleSelection(region.id)
+                }}
+              >
+                <Checkbox checked={selectedForDeletion.has(region.id)} className="bg-[#0B0A13] border-[#EE9B3A]" />
+              </div>
+            )}
             <CardContent className="p-0">
-              {/* Region image */}
               <div className="relative aspect-[21/9] overflow-hidden">
                 {region.image_url ? (
                   <img
@@ -129,7 +204,6 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-[#EE9B3A]/20 to-[#302831]" />
                 )}
-                {/* Region name overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0B0A13] via-[#0B0A13]/50 to-transparent flex items-end p-6">
                   <h3 className="text-[#EE9B3A] font-serif text-3xl">{region.name}</h3>
                 </div>
@@ -139,7 +213,26 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
         ))}
       </div>
 
-      {/* Region detail dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className="bg-[#302831] border-[#EE9B3A]/30">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-[#E7D1B1]">Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription className="text-[#9F8475]">
+              Tem certeza que deseja excluir {selectedForDeletion.size}{" "}
+              {selectedForDeletion.size === 1 ? "região" : "regiões"}? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-transparent border-[#302831] text-[#E7D1B1] hover:bg-[#302831]">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-600 text-white">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {selectedRegion && (
         <Dialog open={!!selectedRegion} onOpenChange={() => setSelectedRegion(null)}>
           <DialogContent className="max-w-4xl bg-[#0B0A13] border-[#EE9B3A]/30 text-[#E7D1B1]">
@@ -169,7 +262,6 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
             </DialogHeader>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-              {/* Historia */}
               <div>
                 <h4 className="text-[#EE9B3A] font-serif mb-2">Historia</h4>
                 <p className="text-[#E7D1B1] leading-relaxed text-sm">
@@ -177,7 +269,6 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
                 </p>
               </div>
 
-              {/* Pontos de Interesse (Subregions) */}
               <div>
                 <h4 className="text-[#EE9B3A] font-serif mb-2">Pontos de Interesse</h4>
                 {subregions.length > 0 ? (
@@ -195,7 +286,6 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
               </div>
             </div>
 
-            {/* Mentions */}
             <div className="mt-6">
               <h4 className="text-[#EE9B3A] font-serif mb-2">Aparições</h4>
               {mentions.length > 0 ? (
@@ -218,7 +308,6 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
         </Dialog>
       )}
 
-      {/* Modal de criação de região */}
       <RegionCrudDialog
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
@@ -229,7 +318,6 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
         }}
       />
 
-      {/* Modal de edição de região */}
       <RegionCrudDialog
         open={!!editingRegion}
         onOpenChange={(open) => !open && setEditingRegion(null)}

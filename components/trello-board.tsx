@@ -138,10 +138,10 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
                         }}
                         onBlur={() => handleEditChapter(chapter.id)}
                         autoFocus
-                        className="bg-[#0B0A13] border-[#EE9B3A] text-[#E7D1B1]"
+                        className="bg-[#0B0A13] border-[#EE9B3A] text-[#E7D1B1] text-center"
                       />
                     ) : (
-                      <h3 className="font-semibold text-[#EE9B3A] text-lg">{chapter.title}</h3>
+                      <h3 className="font-semibold text-[#EE9B3A] text-lg flex-1 text-center">{chapter.title}</h3>
                     )}
 
                     <DropdownMenu>
@@ -178,7 +178,7 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
                       .map((entry) => (
                         <Link key={entry.id} href={`/adventure/${adventureId}/entry/${entry.id}`}>
                           <Card className="bg-[#0B0A13] border-[#302831] hover:border-[#EE9B3A]/50 cursor-pointer transition-colors">
-                            <CardContent className="p-3">
+                            <CardContent className="p-3 text-center">
                               <p className="text-sm text-[#E7D1B1] font-medium">{entry.title}</p>
                               {entry.description && (
                                 <p className="text-xs text-[#9F8475] mt-1 line-clamp-2">{entry.description}</p>

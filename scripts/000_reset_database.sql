@@ -38,21 +38,8 @@ CREATE TABLE profiles (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- RLS para profiles
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "profiles_select_own" ON profiles;
-DROP POLICY IF EXISTS "profiles_insert_own" ON profiles;
-DROP POLICY IF EXISTS "profiles_update_own" ON profiles;
-
-CREATE POLICY "profiles_select_own" ON profiles
-  FOR SELECT USING (auth.uid() = id);
-
-CREATE POLICY "profiles_insert_own" ON profiles
-  FOR INSERT WITH CHECK (auth.uid() = id);
-
-CREATE POLICY "profiles_update_own" ON profiles
-  FOR UPDATE USING (auth.uid() = id);
+-- RLS desabilitado para simplificar
+-- ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- FUNÇÃO: get_email_by_username
@@ -107,25 +94,8 @@ CREATE TABLE adventures (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- RLS para adventures
-ALTER TABLE adventures ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "adventures_select_own" ON adventures;
-DROP POLICY IF EXISTS "adventures_insert_own" ON adventures;
-DROP POLICY IF EXISTS "adventures_update_own" ON adventures;
-DROP POLICY IF EXISTS "adventures_delete_own" ON adventures;
-
-CREATE POLICY "adventures_select_own" ON adventures
-  FOR SELECT USING (auth.uid() = creator_id);
-
-CREATE POLICY "adventures_insert_own" ON adventures
-  FOR INSERT WITH CHECK (auth.uid() = creator_id);
-
-CREATE POLICY "adventures_update_own" ON adventures
-  FOR UPDATE USING (auth.uid() = creator_id);
-
-CREATE POLICY "adventures_delete_own" ON adventures
-  FOR DELETE USING (auth.uid() = creator_id);
+-- RLS desabilitado para simplificar
+-- ALTER TABLE adventures ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- TABELA: chapters
@@ -140,44 +110,8 @@ CREATE TABLE chapters (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- RLS para chapters
-ALTER TABLE chapters ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "chapters_select_own" ON chapters
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = chapters.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "chapters_insert_own" ON chapters
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = chapters.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "chapters_update_own" ON chapters
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = chapters.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "chapters_delete_own" ON chapters
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = chapters.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
+-- RLS desabilitado para simplificar
+-- ALTER TABLE chapters ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- TABELA: tasks (anotações)
@@ -194,44 +128,8 @@ CREATE TABLE tasks (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- RLS para tasks
-ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "tasks_select_own" ON tasks
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = tasks.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "tasks_insert_own" ON tasks
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = tasks.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "tasks_update_own" ON tasks
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = tasks.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "tasks_delete_own" ON tasks
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = tasks.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
+-- RLS desabilitado para simplificar
+-- ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- TABELA: characters
@@ -247,44 +145,8 @@ CREATE TABLE characters (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- RLS para characters
-ALTER TABLE characters ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "characters_select_own" ON characters
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = characters.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "characters_insert_own" ON characters
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = characters.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "characters_update_own" ON characters
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = characters.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "characters_delete_own" ON characters
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = characters.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
+-- RLS desabilitado para simplificar
+-- ALTER TABLE characters ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- TABELA: regions
@@ -299,44 +161,8 @@ CREATE TABLE regions (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- RLS para regions
-ALTER TABLE regions ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "regions_select_own" ON regions
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = regions.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "regions_insert_own" ON regions
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = regions.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "regions_update_own" ON regions
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = regions.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "regions_delete_own" ON regions
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = regions.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
+-- RLS desabilitado para simplificar
+-- ALTER TABLE regions ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- TABELA: sub_regions
@@ -351,48 +177,8 @@ CREATE TABLE sub_regions (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- RLS para sub_regions
-ALTER TABLE sub_regions ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "sub_regions_select_own" ON sub_regions
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM regions 
-      JOIN adventures ON adventures.id = regions.adventure_id
-      WHERE regions.id = sub_regions.region_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "sub_regions_insert_own" ON sub_regions
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM regions 
-      JOIN adventures ON adventures.id = regions.adventure_id
-      WHERE regions.id = sub_regions.region_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "sub_regions_update_own" ON sub_regions
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM regions 
-      JOIN adventures ON adventures.id = regions.adventure_id
-      WHERE regions.id = sub_regions.region_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "sub_regions_delete_own" ON sub_regions
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM regions 
-      JOIN adventures ON adventures.id = regions.adventure_id
-      WHERE regions.id = sub_regions.region_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
+-- RLS desabilitado para simplificar
+-- ALTER TABLE sub_regions ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- TABELA: timeline_entries
@@ -412,44 +198,8 @@ CREATE TABLE timeline_entries (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- RLS para timeline_entries
-ALTER TABLE timeline_entries ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "timeline_entries_select_own" ON timeline_entries
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = timeline_entries.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "timeline_entries_insert_own" ON timeline_entries
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = timeline_entries.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "timeline_entries_update_own" ON timeline_entries
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = timeline_entries.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "timeline_entries_delete_own" ON timeline_entries
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM adventures 
-      WHERE adventures.id = timeline_entries.adventure_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
+-- RLS desabilitado para simplificar
+-- ALTER TABLE timeline_entries ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- TABELA: character_mentions
@@ -464,38 +214,8 @@ CREATE TABLE character_mentions (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- RLS para character_mentions
-ALTER TABLE character_mentions ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "character_mentions_select_own" ON character_mentions
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM timeline_entries
-      JOIN adventures ON adventures.id = timeline_entries.adventure_id
-      WHERE timeline_entries.id = character_mentions.timeline_entry_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "character_mentions_insert_own" ON character_mentions
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM timeline_entries
-      JOIN adventures ON adventures.id = timeline_entries.adventure_id
-      WHERE timeline_entries.id = character_mentions.timeline_entry_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "character_mentions_delete_own" ON character_mentions
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM timeline_entries
-      JOIN adventures ON adventures.id = timeline_entries.adventure_id
-      WHERE timeline_entries.id = character_mentions.timeline_entry_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
+-- RLS desabilitado para simplificar
+-- ALTER TABLE character_mentions ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- TABELA: region_mentions
@@ -509,38 +229,8 @@ CREATE TABLE region_mentions (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- RLS para region_mentions
-ALTER TABLE region_mentions ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "region_mentions_select_own" ON region_mentions
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM timeline_entries
-      JOIN adventures ON adventures.id = timeline_entries.adventure_id
-      WHERE timeline_entries.id = region_mentions.timeline_entry_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "region_mentions_insert_own" ON region_mentions
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM timeline_entries
-      JOIN adventures ON adventures.id = timeline_entries.adventure_id
-      WHERE timeline_entries.id = region_mentions.timeline_entry_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "region_mentions_delete_own" ON region_mentions
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM timeline_entries
-      JOIN adventures ON adventures.id = timeline_entries.adventure_id
-      WHERE timeline_entries.id = region_mentions.timeline_entry_id 
-      AND adventures.creator_id = auth.uid()
-    )
-  );
+-- RLS desabilitado para simplificar
+-- ALTER TABLE region_mentions ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- ÍNDICES PARA PERFORMANCE
@@ -586,39 +276,40 @@ CREATE INDEX idx_region_mentions_region ON region_mentions(region_id);
 CREATE INDEX idx_region_mentions_task ON region_mentions(task_id);
 
 -- =====================================================
+-- FUNÇÃO PARA ATUALIZAR UPDATED_AT
+-- =====================================================
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- =====================================================
 -- TRIGGERS PARA UPDATED_AT
 -- =====================================================
 
--- Function definition moved above
--- CREATE OR REPLACE FUNCTION update_updated_at_column()
--- RETURNS TRIGGER AS $$
--- BEGIN
---   NEW.updated_at = NOW();
---   RETURN NEW;
--- END;
--- $$ LANGUAGE plpgsql;
+CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Trigger definitions moved above
--- CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
---   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_adventures_updated_at BEFORE UPDATE ON adventures
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- CREATE TRIGGER update_adventures_updated_at BEFORE UPDATE ON adventures
---   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_chapters_updated_at BEFORE UPDATE ON chapters
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- CREATE TRIGGER update_chapters_updated_at BEFORE UPDATE ON chapters
---   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON tasks
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON tasks
---   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_characters_updated_at BEFORE UPDATE ON characters
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- CREATE TRIGGER update_characters_updated_at BEFORE UPDATE ON characters
---   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_regions_updated_at BEFORE UPDATE ON regions
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- CREATE TRIGGER update_regions_updated_at BEFORE UPDATE ON regions
---   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_sub_regions_updated_at BEFORE UPDATE ON sub_regions
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- CREATE TRIGGER update_sub_regions_updated_at BEFORE UPDATE ON sub_regions
---   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- CREATE TRIGGER update_timeline_entries_updated_at BEFORE UPDATE ON timeline_entries
---   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_timeline_entries_updated_at BEFORE UPDATE ON timeline_entries
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

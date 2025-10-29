@@ -70,21 +70,10 @@ export function CharacterCrudDialog({
       console.log("[v0] ========== LOADING MENTIONS ==========")
       console.log("[v0] Character ID:", characterId)
 
-      const { data: characterData } = await supabase.from("characters").select("name").eq("id", characterId).single()
-
-      if (!characterData) {
-        console.log("[v0] Character not found")
-        setMentions([])
-        setLoadingMentions(false)
-        return
-      }
-
-      console.log("[v0] Character name:", characterData.name)
-
       const { data: mentionsData, error } = await supabase
         .from("character_mentions")
-        .select("id, task_id, character_name, created_at")
-        .eq("character_name", characterData.name)
+        .select("id, task_id, mention_text, created_at")
+        .eq("character_id", characterId)
         .order("created_at", { ascending: false })
 
       console.log("[v0] Character mentions query result:")
@@ -295,7 +284,7 @@ export function CharacterCrudDialog({
                         <p className="text-[#E7D1B1] font-medium text-sm">
                           {mention.task?.title || "Anotação sem título"}
                         </p>
-                        <p className="text-[#60A5FA] text-xs mt-1">@{mention.character_name}</p>
+                        <p className="text-[#60A5FA] text-xs mt-1">@{mention.mention_text}</p>
                         <p className="text-[#9F8475] text-xs mt-1">
                           {new Date(mention.created_at).toLocaleDateString("pt-BR", {
                             day: "2-digit",

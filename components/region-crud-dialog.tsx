@@ -28,7 +28,7 @@ interface Subregion {
 interface Mention {
   id: string
   task_id: string
-  region_name: string
+  mention_text: string
   created_at: string
   task?: {
     id: string
@@ -89,21 +89,10 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
       console.log("[v0] ========== LOADING REGION MENTIONS ==========")
       console.log("[v0] Region ID:", regionId)
 
-      const { data: regionData } = await supabase.from("regions").select("name").eq("id", regionId).single()
-
-      if (!regionData) {
-        console.log("[v0] Region not found")
-        setMentions([])
-        setLoadingMentions(false)
-        return
-      }
-
-      console.log("[v0] Region name:", regionData.name)
-
       const { data: mentionsData, error } = await supabase
         .from("region_mentions")
-        .select("id, task_id, region_name, created_at")
-        .eq("region_name", regionData.name)
+        .select("id, task_id, mention_text, created_at")
+        .eq("region_id", regionId)
         .order("created_at", { ascending: false })
 
       console.log("[v0] Region mentions query result:")
@@ -381,7 +370,7 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
                         <p className="text-[#E7D1B1] font-medium text-sm">
                           {mention.task?.title || "Anotação sem título"}
                         </p>
-                        <p className="text-[#A78BFA] text-xs mt-1">#{mention.region_name}</p>
+                        <p className="text-[#A78BFA] text-xs mt-1">#{mention.mention_text}</p>
                         <p className="text-[#9F8475] text-xs mt-1">
                           {new Date(mention.created_at).toLocaleDateString("pt-BR", {
                             day: "2-digit",

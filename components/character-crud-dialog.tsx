@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
 import { ImageUpload } from "@/components/image-upload"
+import { Separator } from "@/components/ui/separator"
+import { Link2 } from "lucide-react"
 
 interface Character {
   id: string
@@ -37,6 +39,8 @@ export function CharacterCrudDialog({
   const [history, setHistory] = useState("")
   const [imageUrl, setImageUrl] = useState("")
   const [saving, setSaving] = useState(false)
+  const [mentions, setMentions] = useState<any[]>([])
+  const [loadingMentions, setLoadingMentions] = useState(false)
 
   useEffect(() => {
     if (character) {
@@ -44,13 +48,45 @@ export function CharacterCrudDialog({
       setShortDescription(character.short_description || "")
       setHistory(character.history || "")
       setImageUrl(character.image_url || "")
+      loadMentions(character.id)
     } else {
       setName("")
       setShortDescription("")
       setHistory("")
       setImageUrl("")
+      setMentions([])
     }
   }, [character, open])
+
+  const loadMentions = async (characterId: string) => {
+    setLoadingMentions(true)
+    try {
+      const supabase = createClient()
+      const { data: mentionsData } = await supabase
+        .from("character_mentions")
+        .select("id, task_id, mention_text, created_at")
+        .eq("character_id", characterId)
+        .order("created_at", { ascending: false })
+
+      if (mentionsData && mentionsData.length > 0) {
+        const taskIds = mentionsData.map((m) => m.task_id)
+        const { data: tasksData } = await supabase.from("tasks").select("id, title").in("id", taskIds)
+
+        const mentionsWithTasks = mentionsData.map((mention) => ({
+          ...mention,
+          task: tasksData?.find((t) => t.id === mention.task_id),
+        }))
+
+        setMentions(mentionsWithTasks)
+      } else {
+        setMentions([])
+      }
+    } catch (error) {
+      console.error("[v0] Error loading mentions:", error)
+    } finally {
+      setLoadingMentions(false)
+    }
+  }
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -149,6 +185,42 @@ export function CharacterCrudDialog({
               className="bg-[#0B0A13] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475] resize-none"
             />
           </div>
+
+          {/* Mentions Section */}
+          {character && (
+            <>
+              <Separator className="bg-[#302831]" />
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Link2 className="h-4 w-4 text-[#60A5FA]" />
+                  <Label className="text-[#E7D1B1]">Citações</Label>
+                </div>
+
+                {loadingMentions ? (
+                  <p className="text-[#9F8475] text-sm">Carregando citações...</p>
+                ) : mentions.length > 0 ? (
+                  <div className="space-y-2">
+                    {mentions.map((mention) => (
+                      <div
+                        key={mention.id}
+                        className="p-3 bg-[#0B0A13] rounded-lg border border-[#302831] hover:border-[#60A5FA]/30 transition-colors"
+                      >
+                        <p className="text-[#E7D1B1] font-medium text-sm">
+                          {mention.task?.title || "Anotação sem título"}
+                        </p>
+                        <p className="text-[#60A5FA] text-xs mt-1">@{mention.mention_text}</p>
+                        <p className="text-[#9F8475] text-xs mt-1">
+                          {new Date(mention.created_at).toLocaleDateString("pt-BR")}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[#9F8475] text-sm">Nenhuma citação encontrada</p>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-[#302831]">

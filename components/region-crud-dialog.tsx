@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
 import { ImageUpload } from "@/components/image-upload"
-import { X } from "lucide-react"
+import { X, Link2 } from "lucide-react"
+import { Separator } from "@/components/ui/separator"
 
 interface Region {
   id: string
@@ -22,6 +23,17 @@ interface Subregion {
   id: string
   name: string
   description: string | null
+}
+
+interface Mention {
+  id: string
+  task_id: string
+  mention_text: string
+  created_at: string
+  task?: {
+    id: string
+    title: string
+  }
 }
 
 interface RegionCrudDialogProps {
@@ -41,6 +53,8 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
   const [newSubregionName, setNewSubregionName] = useState("")
   const [newSubregionDesc, setNewSubregionDesc] = useState("")
   const [saving, setSaving] = useState(false)
+  const [mentions, setMentions] = useState<Mention[]>([])
+  const [loadingMentions, setLoadingMentions] = useState(false)
 
   useEffect(() => {
     if (region) {
@@ -49,12 +63,14 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
       setHistory(region.history || "")
       setImageUrl(region.image_url || "")
       loadSubregions(region.id)
+      loadMentions(region.id)
     } else {
       setName("")
       setDescription("")
       setHistory("")
       setImageUrl("")
       setSubregions([])
+      setMentions([])
     }
   }, [region, open])
 
@@ -62,6 +78,36 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
     const supabase = createClient()
     const { data } = await supabase.from("subregions").select("*").eq("region_id", regionId).order("created_at")
     setSubregions(data || [])
+  }
+
+  const loadMentions = async (regionId: string) => {
+    setLoadingMentions(true)
+    try {
+      const supabase = createClient()
+      const { data: mentionsData } = await supabase
+        .from("region_mentions")
+        .select("id, task_id, mention_text, created_at")
+        .eq("region_id", regionId)
+        .order("created_at", { ascending: false })
+
+      if (mentionsData && mentionsData.length > 0) {
+        const taskIds = mentionsData.map((m) => m.task_id)
+        const { data: tasksData } = await supabase.from("tasks").select("id, title").in("id", taskIds)
+
+        const mentionsWithTasks = mentionsData.map((mention) => ({
+          ...mention,
+          task: tasksData?.find((t) => t.id === mention.task_id),
+        }))
+
+        setMentions(mentionsWithTasks)
+      } else {
+        setMentions([])
+      }
+    } catch (error) {
+      console.error("[v0] Error loading mentions:", error)
+    } finally {
+      setLoadingMentions(false)
+    }
   }
 
   const handleAddSubregion = () => {
@@ -113,7 +159,6 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
         }
         regionId = region.id
 
-        // Delete existing subregions that were removed
         const existingIds = subregions.filter((s) => !s.id.startsWith("temp-")).map((s) => s.id)
         if (existingIds.length > 0) {
           await supabase
@@ -135,7 +180,6 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
         regionId = newRegion.id
       }
 
-      // Insert new subregions
       const newSubregions = subregions
         .filter((s) => s.id.startsWith("temp-"))
         .map((s) => ({
@@ -174,13 +218,11 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Image URL */}
           <div className="space-y-2">
             <Label className="text-[#E7D1B1]">Imagem da Região</Label>
             <ImageUpload value={imageUrl} onChange={setImageUrl} onRemove={() => setImageUrl("")} />
           </div>
 
-          {/* Name */}
           <div className="space-y-2">
             <Label htmlFor="name" className="text-[#E7D1B1]">
               Nome <span className="text-red-400">*</span>
@@ -194,7 +236,6 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
             />
           </div>
 
-          {/* Description */}
           <div className="space-y-2">
             <Label htmlFor="description" className="text-[#E7D1B1]">
               Descrição Curta
@@ -208,7 +249,6 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
             />
           </div>
 
-          {/* History */}
           <div className="space-y-2">
             <Label htmlFor="history" className="text-[#E7D1B1]">
               História
@@ -223,60 +263,94 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
             />
           </div>
 
-          {/* Subregions */}
-          <div className="space-y-3 pt-4 border-t border-[#302831]">
-            <Label className="text-[#E7D1B1]">Regiões Internas</Label>
+          {region && (
+            <>
+              <Separator className="bg-[#302831]" />
+              <div className="space-y-3">
+                <Label className="text-[#E7D1B1]">Regiões Internas</Label>
 
-            {/* Existing subregions */}
-            {subregions.length > 0 && (
-              <div className="space-y-2">
-                {subregions.map((sub) => (
-                  <div
-                    key={sub.id}
-                    className="flex items-start gap-2 p-3 bg-[#0B0A13] rounded-lg border border-[#302831]"
-                  >
-                    <div className="flex-1">
-                      <p className="text-[#E7D1B1] font-medium">{sub.name}</p>
-                      {sub.description && <p className="text-[#9F8475] text-sm mt-1">{sub.description}</p>}
-                    </div>
-                    <Button
-                      onClick={() => handleRemoveSubregion(sub.id)}
-                      variant="ghost"
-                      size="sm"
-                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                {subregions.length > 0 && (
+                  <div className="space-y-2">
+                    {subregions.map((sub) => (
+                      <div
+                        key={sub.id}
+                        className="flex items-start gap-2 p-3 bg-[#0B0A13] rounded-lg border border-[#302831]"
+                      >
+                        <div className="flex-1">
+                          <p className="text-[#E7D1B1] font-medium">{sub.name}</p>
+                          {sub.description && <p className="text-[#9F8475] text-sm mt-1">{sub.description}</p>}
+                        </div>
+                        <Button
+                          onClick={() => handleRemoveSubregion(sub.id)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
+                )}
 
-            {/* Add new subregion */}
-            <div className="space-y-2 p-3 bg-[#0B0A13] rounded-lg border border-[#302831]">
-              <Input
-                value={newSubregionName}
-                onChange={(e) => setNewSubregionName(e.target.value)}
-                placeholder="Nome da região interna"
-                className="bg-[#302831] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475]"
-              />
-              <Input
-                value={newSubregionDesc}
-                onChange={(e) => setNewSubregionDesc(e.target.value)}
-                placeholder="Descrição (opcional)"
-                className="bg-[#302831] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475]"
-              />
-              <Button
-                onClick={handleAddSubregion}
-                disabled={!newSubregionName.trim()}
-                variant="outline"
-                size="sm"
-                className="w-full border-[#EE9B3A]/30 text-[#EE9B3A] hover:bg-[#EE9B3A]/10 bg-transparent"
-              >
-                Adicionar Região Interna
-              </Button>
-            </div>
-          </div>
+                <div className="space-y-2 p-3 bg-[#0B0A13] rounded-lg border border-[#302831]">
+                  <Input
+                    value={newSubregionName}
+                    onChange={(e) => setNewSubregionName(e.target.value)}
+                    placeholder="Nome da região interna"
+                    className="bg-[#302831] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475]"
+                  />
+                  <Input
+                    value={newSubregionDesc}
+                    onChange={(e) => setNewSubregionDesc(e.target.value)}
+                    placeholder="Descrição (opcional)"
+                    className="bg-[#302831] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475]"
+                  />
+                  <Button
+                    onClick={handleAddSubregion}
+                    disabled={!newSubregionName.trim()}
+                    variant="outline"
+                    size="sm"
+                    className="w-full border-[#EE9B3A]/30 text-[#EE9B3A] hover:bg-[#EE9B3A]/10 bg-transparent"
+                  >
+                    Adicionar Região Interna
+                  </Button>
+                </div>
+              </div>
+
+              <Separator className="bg-[#302831]" />
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Link2 className="h-4 w-4 text-[#A78BFA]" />
+                  <Label className="text-[#E7D1B1]">Citações</Label>
+                </div>
+
+                {loadingMentions ? (
+                  <p className="text-[#9F8475] text-sm">Carregando citações...</p>
+                ) : mentions.length > 0 ? (
+                  <div className="space-y-2">
+                    {mentions.map((mention) => (
+                      <div
+                        key={mention.id}
+                        className="p-3 bg-[#0B0A13] rounded-lg border border-[#302831] hover:border-[#A78BFA]/30 transition-colors"
+                      >
+                        <p className="text-[#E7D1B1] font-medium text-sm">
+                          {mention.task?.title || "Anotação sem título"}
+                        </p>
+                        <p className="text-[#A78BFA] text-xs mt-1">#{mention.mention_text}</p>
+                        <p className="text-[#9F8475] text-xs mt-1">
+                          {new Date(mention.created_at).toLocaleDateString("pt-BR")}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[#9F8475] text-sm">Nenhuma citação encontrada</p>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-[#302831]">

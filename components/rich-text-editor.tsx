@@ -333,9 +333,22 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
           onChange={handleInput}
           onKeyDown={handleKeyDown}
           disabled={disabled}
+          style={{
+            background: `linear-gradient(transparent, transparent)`,
+          }}
           className="w-full min-h-[500px] p-4 bg-[#0B0A13] border border-[#302831] rounded-lg text-[#E7D1B1] focus:outline-none focus:ring-2 focus:ring-[#EE9B3A]/50 leading-relaxed resize-none font-sans disabled:opacity-50 disabled:cursor-not-allowed"
           placeholder="Comece a escrever sua anotação... Use @ para mencionar personagens e # para mencionar regiões."
         />
+
+        <div
+          className="absolute top-0 left-0 w-full min-h-[500px] p-4 pointer-events-none whitespace-pre-wrap break-words leading-relaxed font-sans"
+          style={{
+            color: "transparent",
+            caretColor: "#E7D1B1",
+          }}
+        >
+          {renderColoredText(value)}
+        </div>
 
         {showSuggestions && suggestions.length > 0 && (
           <Card className="absolute z-50 mt-1 w-64 bg-[#302831] border-[#EE9B3A]/30 shadow-lg">
@@ -349,11 +362,16 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
                     }`}
                     onClick={() => insertMention(item)}
                   >
-                    <div className="h-6 w-6 rounded-full bg-[#EE9B3A]/20 flex items-center justify-center text-[#EE9B3A] text-xs font-medium">
+                    <div
+                      className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-medium ${
+                        "type" in item ? "bg-[#60A5FA]/20 text-[#60A5FA]" : "bg-[#A78BFA]/20 text-[#A78BFA]"
+                      }`}
+                    >
                       {item.name.charAt(0).toUpperCase()}
                     </div>
                     <span className="text-sm text-[#E7D1B1]">{item.name}</span>
                     {"type" in item && <span className="ml-auto text-xs text-[#9F8475]">Personagem</span>}
+                    {!("type" in item) && <span className="ml-auto text-xs text-[#9F8475]">Região</span>}
                   </div>
                 ))}
               </div>
@@ -363,4 +381,46 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
       </div>
     </div>
   )
+}
+
+function renderColoredText(text: string) {
+  const parts: React.ReactNode[] = []
+  let lastIndex = 0
+
+  // Find all mentions (@character and #region)
+  const mentionRegex = /(@[\w\s()]+(?=\s|$|[.,!?]))|(#[\w\s()]+(?=\s|$|[.,!?]))/g
+  let match
+
+  while ((match = mentionRegex.exec(text)) !== null) {
+    // Add text before mention
+    if (match.index > lastIndex) {
+      parts.push(
+        <span key={`text-${lastIndex}`} className="text-[#E7D1B1]">
+          {text.slice(lastIndex, match.index)}
+        </span>,
+      )
+    }
+
+    // Add colored mention
+    const mention = match[0]
+    const isCharacter = mention.startsWith("@")
+    parts.push(
+      <span key={`mention-${match.index}`} className={isCharacter ? "text-[#60A5FA]" : "text-[#A78BFA]"}>
+        {mention}
+      </span>,
+    )
+
+    lastIndex = match.index + mention.length
+  }
+
+  // Add remaining text
+  if (lastIndex < text.length) {
+    parts.push(
+      <span key={`text-${lastIndex}`} className="text-[#E7D1B1]">
+        {text.slice(lastIndex)}
+      </span>,
+    )
+  }
+
+  return parts.length > 0 ? parts : <span className="text-[#E7D1B1]">{text}</span>
 }

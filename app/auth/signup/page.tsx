@@ -141,27 +141,25 @@ export default function SignUpPage() {
 
       console.log("[v0] Signup successful for user:", data.user.id)
 
-      console.log("[v0] Waiting for trigger to create profile...")
+      console.log("[v0] Creating profile manually...")
 
-      // Aguardar 2 segundos para o trigger executar
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      const { error: profileError } = await supabase.from("profiles").insert({
+        id: data.user.id,
+        email: data.user.email!,
+        username: loginName,
+        display_name: username,
+      })
 
-      // Verificar se o profile foi criado (opcional, apenas para debug)
-      try {
-        const { data: profileData, error: profileCheckError } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("id", data.user.id)
-          .single()
-
-        if (profileCheckError || !profileData) {
-          console.warn("[v0] Profile not found after trigger execution:", profileCheckError?.message)
-          console.warn("[v0] User may need to logout and login again for profile to be created")
+      if (profileError) {
+        console.error("[v0] Profile creation error:", profileError)
+        // Se o profile já existe (erro de duplicate key), não é um problema
+        if (!profileError.message.includes("duplicate") && !profileError.message.includes("unique")) {
+          throw new Error("Erro ao criar perfil de usuário: " + profileError.message)
         } else {
-          console.log("[v0] Profile created successfully by trigger")
+          console.log("[v0] Profile already exists (probably created by trigger), continuing...")
         }
-      } catch (checkError) {
-        console.warn("[v0] Could not verify profile creation:", checkError)
+      } else {
+        console.log("[v0] Profile created successfully")
       }
 
       console.log("[v0] Redirecting to signup success page...")

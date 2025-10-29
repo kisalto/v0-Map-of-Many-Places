@@ -28,7 +28,7 @@ interface Subregion {
 interface Mention {
   id: string
   task_id: string
-  mention_text: string
+  region_name: string
   created_at: string
   task?: {
     id: string
@@ -89,14 +89,21 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
       console.log("[v0] ========== LOADING REGION MENTIONS ==========")
       console.log("[v0] Region ID:", regionId)
 
-      const { data: allMentions, error: allError } = await supabase.from("region_mentions").select("*").limit(10)
+      const { data: regionData } = await supabase.from("regions").select("name").eq("id", regionId).single()
 
-      console.log("[v0] All region_mentions in database (first 10):", allMentions, "Error:", allError)
+      if (!regionData) {
+        console.log("[v0] Region not found")
+        setMentions([])
+        setLoadingMentions(false)
+        return
+      }
+
+      console.log("[v0] Region name:", regionData.name)
 
       const { data: mentionsData, error } = await supabase
         .from("region_mentions")
-        .select("id, task_id, mention_text, created_at, region_id")
-        .eq("region_id", regionId)
+        .select("id, task_id, region_name, created_at")
+        .eq("region_name", regionData.name)
         .order("created_at", { ascending: false })
 
       console.log("[v0] Region mentions query result:")
@@ -374,7 +381,7 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
                         <p className="text-[#E7D1B1] font-medium text-sm">
                           {mention.task?.title || "Anotação sem título"}
                         </p>
-                        <p className="text-[#A78BFA] text-xs mt-1">#{mention.mention_text}</p>
+                        <p className="text-[#A78BFA] text-xs mt-1">#{mention.region_name}</p>
                         <p className="text-[#9F8475] text-xs mt-1">
                           {new Date(mention.created_at).toLocaleDateString("pt-BR", {
                             day: "2-digit",

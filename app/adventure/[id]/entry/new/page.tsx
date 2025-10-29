@@ -99,43 +99,29 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
           }
         })
 
-        const { data: charactersData, error: charError } = await supabase
-          .from("characters")
-          .select("id, name")
-          .eq("adventure_id", adventureId)
-          .in("name", characterMentions)
+        const mentionsToInsert = characterMentions.map((name) => ({
+          task_id: entry.id,
+          character_name: name,
+        }))
 
-        console.log("[v0] Characters query result:", { charactersData, charError })
+        console.log("[v0] About to insert character mentions:")
+        console.log("[v0] Data structure:", JSON.stringify(mentionsToInsert, null, 2))
 
-        if (charactersData && charactersData.length > 0) {
-          const mentionsToInsert = charactersData.map((char) => ({
-            character_id: char.id,
-            task_id: entry.id,
-            mention_text: char.name,
-            character_type: "npc",
-          }))
+        const { data: insertedMentions, error: mentionError } = await supabase
+          .from("character_mentions")
+          .insert(mentionsToInsert)
+          .select()
 
-          console.log("[v0] About to insert character mentions:")
-          console.log("[v0] Data structure:", JSON.stringify(mentionsToInsert, null, 2))
-
-          const { data: insertedMentions, error: mentionError } = await supabase
-            .from("character_mentions")
-            .insert(mentionsToInsert)
-            .select()
-
-          if (mentionError) {
-            console.error("[v0] ❌ Error saving character mentions:")
-            console.error("[v0] Error object:", JSON.stringify(mentionError, null, 2))
-            console.error("[v0] Error message:", mentionError.message)
-            console.error("[v0] Error details:", mentionError.details)
-            console.error("[v0] Error hint:", mentionError.hint)
-            console.error("[v0] Error code:", mentionError.code)
-          } else {
-            console.log("[v0] ✅ Character mentions saved successfully!")
-            console.log("[v0] Inserted mentions:", insertedMentions)
-          }
+        if (mentionError) {
+          console.error("[v0] ❌ Error saving character mentions:")
+          console.error("[v0] Error object:", JSON.stringify(mentionError, null, 2))
+          console.error("[v0] Error message:", mentionError.message)
+          console.error("[v0] Error details:", mentionError.details)
+          console.error("[v0] Error hint:", mentionError.hint)
+          console.error("[v0] Error code:", mentionError.code)
         } else {
-          console.log("[v0] ❌ No characters found matching the mentions")
+          console.log("[v0] ✅ Character mentions saved successfully!")
+          console.log("[v0] Inserted mentions:", insertedMentions)
         }
       }
 
@@ -152,42 +138,29 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
           }
         })
 
-        const { data: regionsData, error: regError } = await supabase
-          .from("regions")
-          .select("id, name")
-          .eq("adventure_id", adventureId)
-          .in("name", regionMentions)
+        const mentionsToInsert = regionMentions.map((name) => ({
+          task_id: entry.id,
+          region_name: name,
+        }))
 
-        console.log("[v0] Regions query result:", { regionsData, regError })
+        console.log("[v0] About to insert region mentions:")
+        console.log("[v0] Data structure:", JSON.stringify(mentionsToInsert, null, 2))
 
-        if (regionsData && regionsData.length > 0) {
-          const mentionsToInsert = regionsData.map((region) => ({
-            region_id: region.id,
-            task_id: entry.id,
-            mention_text: region.name,
-          }))
+        const { data: insertedMentions, error: mentionError } = await supabase
+          .from("region_mentions")
+          .insert(mentionsToInsert)
+          .select()
 
-          console.log("[v0] About to insert region mentions:")
-          console.log("[v0] Data structure:", JSON.stringify(mentionsToInsert, null, 2))
-
-          const { data: insertedMentions, error: mentionError } = await supabase
-            .from("region_mentions")
-            .insert(mentionsToInsert)
-            .select()
-
-          if (mentionError) {
-            console.error("[v0] ❌ Error saving region mentions:")
-            console.error("[v0] Error object:", JSON.stringify(mentionError, null, 2))
-            console.error("[v0] Error message:", mentionError.message)
-            console.error("[v0] Error details:", mentionError.details)
-            console.error("[v0] Error hint:", mentionError.hint)
-            console.error("[v0] Error code:", mentionError.code)
-          } else {
-            console.log("[v0] ✅ Region mentions saved successfully!")
-            console.log("[v0] Inserted mentions:", insertedMentions)
-          }
+        if (mentionError) {
+          console.error("[v0] ❌ Error saving region mentions:")
+          console.error("[v0] Error object:", JSON.stringify(mentionError, null, 2))
+          console.error("[v0] Error message:", mentionError.message)
+          console.error("[v0] Error details:", mentionError.details)
+          console.error("[v0] Error hint:", mentionError.hint)
+          console.error("[v0] Error code:", mentionError.code)
         } else {
-          console.log("[v0] ❌ No regions found matching the mentions")
+          console.log("[v0] ✅ Region mentions saved successfully!")
+          console.log("[v0] Inserted mentions:", insertedMentions)
         }
       }
 

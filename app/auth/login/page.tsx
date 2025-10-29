@@ -18,16 +18,13 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("[v0] ========== LOGIN ATTEMPT START ==========")
 
     if (!identifier || !identifier.trim()) {
-      console.error("[v0] Validation failed: identifier is empty")
       setError("Por favor, insira seu email ou nome de login")
       return
     }
 
     if (!password || password.length < 6) {
-      console.error("[v0] Validation failed: password too short")
       setError("A senha deve ter pelo menos 6 caracteres")
       return
     }
@@ -38,21 +35,10 @@ export default function LoginPage() {
 
     try {
       const isEmail = identifier.includes("@")
-      console.log("[v0] Login attempt with:", {
-        identifier: identifier.substring(0, 3) + "***",
-        isEmail,
-        identifierLength: identifier.length,
-        passwordLength: password.length,
-      })
-
       let emailToUse = identifier
 
       if (!isEmail) {
-        console.log("[v0] Attempting username login...")
-        console.log("[v0] Looking up email by username:", identifier.substring(0, 3) + "***")
-
         if (identifier.length < 3) {
-          console.error("[v0] Username too short:", identifier.length)
           throw new Error("Nome de login deve ter pelo menos 3 caracteres")
         }
 
@@ -62,50 +48,30 @@ export default function LoginPage() {
           .eq("username", identifier)
           .maybeSingle()
 
-        console.log("[v0] Profile lookup result:", {
-          success: !profileError,
-          hasProfile: !!profileData,
-          email: profileData?.email ? profileData.email.substring(0, 3) + "***" : null,
-          error: profileError?.message,
-        })
-
         if (profileError) {
-          console.error("[v0] Profile lookup error:", profileError)
           throw new Error("Erro ao buscar usuário. Tente usar seu email para fazer login.")
         }
 
         if (!profileData || !profileData.email) {
-          console.error("[v0] Username not found in profiles:", identifier)
           throw new Error(
             "Nome de usuário não encontrado. Por favor, use seu EMAIL para fazer login pela primeira vez.",
           )
         }
 
         emailToUse = profileData.email
-        console.log("[v0] Found email for username, will attempt login")
       } else {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(identifier)) {
-          console.error("[v0] Invalid email format:", identifier)
           throw new Error("Formato de email inválido")
         }
       }
 
-      console.log("[v0] Attempting login with email...")
       const { data, error } = await supabase.auth.signInWithPassword({
         email: emailToUse,
         password,
       })
 
-      console.log("[v0] Login response:", {
-        success: !error,
-        hasUser: !!data?.user,
-        userId: data?.user?.id,
-        error: error?.message,
-      })
-
       if (error) {
-        console.error("[v0] Login error:", error)
         if (error.message.includes("Invalid login credentials")) {
           throw new Error("Email ou senha incorretos. Verifique suas credenciais e tente novamente.")
         }
@@ -113,50 +79,35 @@ export default function LoginPage() {
       }
 
       if (!data?.user) {
-        console.error("[v0] No user data returned after login")
         throw new Error("Erro ao autenticar usuário. Tente novamente.")
       }
 
-      console.log("[v0] Login successful for user:", data.user.id)
-
-      console.log("[v0] Checking if profile exists...")
-      const { data: existingProfile, error: profileCheckError } = await supabase
+      // Buscar profile pelo email (não pelo ID) para lidar com múltiplos usuários
+      const { data: existingProfile } = await supabase
         .from("profiles")
-        .select("id")
-        .eq("id", data.user.id)
+        .select("id, email")
+        .eq("email", data.user.email!)
         .maybeSingle()
 
-      console.log("[v0] Profile check result:", {
-        exists: !!existingProfile,
-        error: profileCheckError?.message,
-      })
-
-      if (!existingProfile && !profileCheckError) {
-        console.log("[v0] Profile missing! Creating profile from user metadata...")
+      if (existingProfile && existingProfile.id !== data.user.id) {
+        // Profile existe mas com ID diferente - atualizar o ID
+        await supabase.from("profiles").update({ id: data.user.id }).eq("email", data.user.email!)
+      } else if (!existingProfile) {
+        // Profile não existe - criar novo
         const username = data.user.user_metadata?.username || data.user.email?.split("@")[0] || "user"
         const displayName = data.user.user_metadata?.display_name || username
 
-        const { error: createProfileError } = await supabase.from("profiles").insert({
+        await supabase.from("profiles").insert({
           id: data.user.id,
           email: data.user.email!,
           username: username,
           display_name: displayName,
         })
-
-        if (createProfileError) {
-          console.error("[v0] Failed to create missing profile:", createProfileError)
-        } else {
-          console.log("[v0] Profile created successfully during login")
-        }
       }
 
-      console.log("[v0] Redirecting to dashboard...")
       router.push("/dashboard")
       router.refresh()
-      console.log("[v0] ========== LOGIN ATTEMPT END (SUCCESS) ==========")
     } catch (error: unknown) {
-      console.error("[v0] ========== LOGIN ATTEMPT END (ERROR) ==========")
-      console.error("[v0] Login error details:", error)
       setError(error instanceof Error ? error.message : "Erro ao fazer login. Tente novamente.")
     } finally {
       setIsLoading(false)

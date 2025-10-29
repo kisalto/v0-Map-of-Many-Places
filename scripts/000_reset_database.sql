@@ -22,6 +22,7 @@ DROP TABLE IF EXISTS characters CASCADE;
 DROP TABLE IF EXISTS tasks CASCADE;
 DROP TABLE IF EXISTS chapters CASCADE;
 DROP TABLE IF EXISTS adventures CASCADE;
+DROP TABLE IF EXISTS adventure_members CASCADE;
 DROP TABLE IF EXISTS profiles CASCADE;
 
 -- =====================================================
@@ -98,6 +99,22 @@ CREATE TABLE adventures (
 
 -- RLS desabilitado para simplificar
 -- ALTER TABLE adventures ENABLE ROW LEVEL SECURITY;
+
+-- =====================================================
+-- TABELA: adventure_members
+-- =====================================================
+-- Adicionada tabela adventure_members para relacionamento muitos-para-muitos
+CREATE TABLE adventure_members (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  adventure_id UUID NOT NULL REFERENCES adventures(id) ON DELETE CASCADE,
+  profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  role TEXT DEFAULT 'member' CHECK (role IN ('owner', 'admin', 'member', 'viewer')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(adventure_id, profile_id)
+);
+
+-- RLS desabilitado para simplificar
+-- ALTER TABLE adventure_members ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- TABELA: chapters
@@ -242,6 +259,11 @@ CREATE TABLE region_mentions (
 CREATE INDEX idx_adventures_creator ON adventures(creator_id);
 CREATE INDEX idx_adventures_status ON adventures(status);
 
+-- Índices para adventure_members
+CREATE INDEX idx_adventure_members_adventure ON adventure_members(adventure_id);
+CREATE INDEX idx_adventure_members_profile ON adventure_members(profile_id);
+CREATE INDEX idx_adventure_members_role ON adventure_members(role);
+
 -- Índices para chapters
 CREATE INDEX idx_chapters_adventure ON chapters(adventure_id);
 CREATE INDEX idx_chapters_order ON chapters(order_index);
@@ -314,4 +336,7 @@ CREATE TRIGGER update_sub_regions_updated_at BEFORE UPDATE ON sub_regions
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_timeline_entries_updated_at BEFORE UPDATE ON timeline_entries
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_adventure_members_updated_at BEFORE UPDATE ON adventure_members
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

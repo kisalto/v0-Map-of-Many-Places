@@ -48,12 +48,28 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
 
     // Load mentions from database
     const supabase = createClient()
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("character_mentions")
-      .select("*, tasks(*)")
-      .eq("character_name", character.name)
+      .select("id, mention_text, task_id, created_at")
+      .eq("character_id", character.id)
+      .order("created_at", { ascending: false })
 
-    setMentions(data || [])
+    if (error) {
+      console.error("[v0] Error loading character mentions:", error)
+      setMentions([])
+    } else {
+      // Load task details for each mention
+      const mentionsWithTasks = await Promise.all(
+        (data || []).map(async (mention) => {
+          if (mention.task_id) {
+            const { data: task } = await supabase.from("tasks").select("id, title").eq("id", mention.task_id).single()
+            return { ...mention, task }
+          }
+          return mention
+        }),
+      )
+      setMentions(mentionsWithTasks)
+    }
   }
 
   const handleEdit = (character: Character) => {
@@ -190,9 +206,13 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
                         <div
                           key={mention.id}
                           className="text-[#EE9B3A] hover:underline cursor-pointer text-sm"
-                          onClick={() => router.push(`/adventure/${adventure.id}/entry/${mention.task_id}`)}
+                          onClick={() => {
+                            if (mention.task_id) {
+                              router.push(`/adventure/${adventure.id}/entry/${mention.task_id}`)
+                            }
+                          }}
                         >
-                          {mention.tasks?.title || "Anotação sem título"}
+                          {mention.task?.title || "Anotação sem título"}
                         </div>
                       ))}
                     </div>

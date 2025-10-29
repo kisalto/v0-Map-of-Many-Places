@@ -34,7 +34,7 @@ interface RegionCrudDialogProps {
 
 export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSuccess }: RegionCrudDialogProps) {
   const [name, setName] = useState("")
-  const [shortDescription, setShortDescription] = useState("")
+  const [description, setDescription] = useState("")
   const [history, setHistory] = useState("")
   const [imageUrl, setImageUrl] = useState("")
   const [subregions, setSubregions] = useState<Subregion[]>([])
@@ -45,13 +45,13 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
   useEffect(() => {
     if (region) {
       setName(region.name)
-      setShortDescription(region.short_description || "")
+      setDescription(region.short_description || "")
       setHistory(region.history || "")
       setImageUrl(region.image_url || "")
       loadSubregions(region.id)
     } else {
       setName("")
-      setShortDescription("")
+      setDescription("")
       setHistory("")
       setImageUrl("")
       setSubregions([])
@@ -96,30 +96,43 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
       const data = {
         adventure_id: adventureId,
         name: name.trim(),
-        short_description: shortDescription.trim() || null,
+        description: description.trim() || null,
         history: history.trim() || null,
         image_url: imageUrl.trim() || null,
       }
+
+      console.log("[v0] Saving region with data:", data)
 
       let regionId: string
 
       if (region) {
         const { error } = await supabase.from("regions").update(data).eq("id", region.id)
-        if (error) throw error
+        if (error) {
+          console.error("[v0] Error updating region:", error)
+          throw error
+        }
         regionId = region.id
 
         // Delete existing subregions that were removed
         const existingIds = subregions.filter((s) => !s.id.startsWith("temp-")).map((s) => s.id)
-        await supabase
-          .from("subregions")
-          .delete()
-          .eq("region_id", regionId)
-          .not("id", "in", `(${existingIds.join(",")})`)
+        if (existingIds.length > 0) {
+          await supabase
+            .from("subregions")
+            .delete()
+            .eq("region_id", regionId)
+            .not("id", "in", `(${existingIds.join(",")})`)
+        }
       } else {
         const { data: newRegion, error } = await supabase.from("regions").insert(data).select().single()
-        if (error) throw error
+        if (error) {
+          console.error("[v0] Error creating region:", error)
+          throw error
+        }
         console.log("[v0] Region created:", newRegion)
-        regionId = newRegion!.id
+        if (!newRegion) {
+          throw new Error("Failed to create region - no data returned")
+        }
+        regionId = newRegion.id
       }
 
       // Insert new subregions
@@ -132,14 +145,17 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
         }))
 
       if (newSubregions.length > 0) {
-        await supabase.from("subregions").insert(newSubregions)
+        const { error: subError } = await supabase.from("subregions").insert(newSubregions)
+        if (subError) {
+          console.error("[v0] Error creating subregions:", subError)
+        }
       }
 
       onSuccess()
       onOpenChange(false)
     } catch (error) {
       console.error("[v0] Error saving region:", error)
-      alert("Erro ao salvar região")
+      alert("Erro ao salvar região. Verifique o console para mais detalhes.")
     } finally {
       setSaving(false)
     }
@@ -178,15 +194,15 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
             />
           </div>
 
-          {/* Short Description */}
+          {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="short-description" className="text-[#E7D1B1]">
+            <Label htmlFor="description" className="text-[#E7D1B1]">
               Descrição Curta
             </Label>
             <Input
-              id="short-description"
-              value={shortDescription}
-              onChange={(e) => setShortDescription(e.target.value)}
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               placeholder="Ex: Vila no domínio de Barovia"
               className="bg-[#0B0A13] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475]"
             />

@@ -52,10 +52,26 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
   const router = useRouter()
 
   const handleAddChapter = async () => {
-    if (!newChapterTitle.trim()) return
+    console.log("[v0] ========== ADD CHAPTER START ==========")
+    console.log("[v0] New chapter title:", newChapterTitle)
 
+    if (!newChapterTitle.trim()) {
+      console.log("[v0] Validation failed: title is empty")
+      console.log("[v0] ========== ADD CHAPTER END (VALIDATION FAILED) ==========")
+      return
+    }
+
+    console.log("[v0] Creating Supabase client...")
     const supabase = createClient()
 
+    console.log("[v0] Preparing chapter data:", {
+      adventure_id: adventureId,
+      title: newChapterTitle,
+      order_index: chapters.length,
+      is_completed: false,
+    })
+
+    console.log("[v0] Inserting chapter into database...")
     const { data, error } = await supabase
       .from("chapters")
       .insert({
@@ -67,11 +83,29 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
       .select()
       .single()
 
-    if (!error && data) {
-      setChapters([...chapters, data])
-      setNewChapterTitle("")
-      router.refresh()
+    if (error) {
+      console.error("[v0] Error creating chapter:", error)
+      console.log("[v0] Error details:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      })
+      console.log("[v0] ========== ADD CHAPTER END (ERROR) ==========")
+      return
     }
+
+    if (!data) {
+      console.error("[v0] No chapter data returned")
+      console.log("[v0] ========== ADD CHAPTER END (NO DATA) ==========")
+      return
+    }
+
+    console.log("[v0] Chapter created successfully:", data)
+    setChapters([...chapters, data])
+    setNewChapterTitle("")
+    console.log("[v0] Refreshing router...")
+    router.refresh()
+    console.log("[v0] ========== ADD CHAPTER END (SUCCESS) ==========")
   }
 
   const handleEditChapter = async (chapterId: string) => {
@@ -193,6 +227,10 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
                     {!chapter.is_completed ? (
                       <>
                         <Button
+                          onClick={() => {
+                            console.log("[v0] Navigating to create task for chapter:", chapter.id)
+                            console.log("[v0] URL:", `/adventure/${adventureId}/entry/new?chapter=${chapter.id}`)
+                          }}
                           asChild
                           variant="outline"
                           size="sm"

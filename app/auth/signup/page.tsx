@@ -187,6 +187,12 @@ export default function SignUpPage() {
             <h2 className="text-2xl text-[#EE9B3A] font-serif mb-2">Criar Conta</h2>
             <p className="text-[#9F8475] text-sm">Junte-se à comunidade</p>
           </div>
+          <div className="mb-4 p-3 bg-[#EE9B3A]/10 border border-[#EE9B3A]/30 rounded-md">
+            <p className="text-xs text-[#E7D1B1]">
+              📧 Após criar sua conta, você receberá um email de confirmação. Verifique sua caixa de entrada para ativar
+              sua conta.
+            </p>
+          </div>
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-4">
               <div className="grid gap-2">

@@ -43,13 +43,15 @@ export function CharacterCrudDialog({
   const [loadingMentions, setLoadingMentions] = useState(false)
 
   useEffect(() => {
-    if (character) {
+    if (open && character) {
+      console.log("[v0] Dialog opened with character:", character)
       setName(character.name)
       setShortDescription(character.short_description || "")
       setHistory(character.history || "")
       setImageUrl(character.image_url || "")
       loadMentions(character.id)
-    } else {
+    } else if (open && !character) {
+      console.log("[v0] Dialog opened for new character")
       setName("")
       setShortDescription("")
       setHistory("")

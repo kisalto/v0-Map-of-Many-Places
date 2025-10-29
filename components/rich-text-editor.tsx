@@ -382,8 +382,7 @@ function renderColoredText(text: string) {
   const parts: React.ReactNode[] = []
   let lastIndex = 0
 
-  // Find all mentions (@character and #region)
-  const mentionRegex = /(@[\w\s()]+(?=\s|$|[.,!?]))|(#[\w\s()]+(?=\s|$|[.,!?]))/g
+  const mentionRegex = /(@[\w()]+)|(#[\w()]+)/g
   let match
 
   while ((match = mentionRegex.exec(text)) !== null) {

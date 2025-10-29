@@ -17,6 +17,7 @@ interface Adventure {
   id: string
   title: string
   description: string | null
+  is_active?: boolean
 }
 
 interface AdventureHeaderProps {
@@ -36,6 +37,8 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
   const [isInviting, setIsInviting] = useState(false)
   const [isDeactivating, setIsDeactivating] = useState(false)
   const router = useRouter()
+
+  const isActive = adventure.is_active !== false
 
   const isTimelinePage = pathname === `/adventure/${adventure.id}`
   const isCharactersPage = pathname === `/adventure/${adventure.id}/characters`
@@ -105,7 +108,12 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Button variant="ghost" size="sm" asChild className="text-[#E7D1B1] hover:text-[#EE9B3A]">
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+                className="text-[#E7D1B1] hover:text-[#EE9B3A] hover:bg-[#302831]"
+              >
                 <Link href="/dashboard">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Voltar
@@ -125,8 +133,8 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
                     size="sm"
                     className={`${
                       isTimelinePage
-                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none"
-                        : "text-[#E7D1B1] hover:text-[#EE9B3A]"
+                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none bg-transparent"
+                        : "text-[#E7D1B1] hover:text-[#EE9B3A] hover:bg-[#302831]"
                     }`}
                   >
                     Linha do Tempo
@@ -139,8 +147,8 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
                     size="sm"
                     className={`${
                       isCharactersPage
-                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none"
-                        : "text-[#E7D1B1] hover:text-[#EE9B3A]"
+                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none bg-transparent"
+                        : "text-[#E7D1B1] hover:text-[#EE9B3A] hover:bg-[#302831]"
                     }`}
                   >
                     Personagens
@@ -153,8 +161,8 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
                     size="sm"
                     className={`${
                       isRegionsPage
-                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none"
-                        : "text-[#E7D1B1] hover:text-[#EE9B3A]"
+                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none bg-transparent"
+                        : "text-[#E7D1B1] hover:text-[#EE9B3A] hover:bg-[#302831]"
                     }`}
                   >
                     Regiões
@@ -167,8 +175,8 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
                     size="sm"
                     className={`${
                       isSearchPage
-                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none"
-                        : "text-[#E7D1B1] hover:text-[#EE9B3A]"
+                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none bg-transparent"
+                        : "text-[#E7D1B1] hover:text-[#EE9B3A] hover:bg-[#302831]"
                     }`}
                   >
                     Busca
@@ -178,9 +186,15 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
             </div>
 
             <div className="flex items-center gap-3">
-              <Badge variant="secondary" className="bg-[#84E557]/20 text-[#84E557] border-[#84E557]/30">
-                Ativa
-              </Badge>
+              {isActive ? (
+                <Badge variant="secondary" className="bg-[#84E557]/20 text-[#84E557] border-[#84E557]/30 font-serif">
+                  Ativo
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="bg-red-500/20 text-red-400 border-red-500/30 font-serif">
+                  Desativado
+                </Badge>
+              )}
 
               <Button
                 onClick={() => setShowSettings(true)}
@@ -208,7 +222,6 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
           </DialogHeader>
 
           <div className="space-y-6 py-4">
-            {/* Convidar pessoa */}
             <div className="space-y-3">
               <Label htmlFor="invite-email" className="text-[#E7D1B1]">
                 Convidar Pessoa
@@ -223,7 +236,39 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
                   className="bg-[#0B0A13] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475]"
                 />
                 <Button
-                  onClick={handleInvite}
+                  onClick={async () => {
+                    if (!inviteEmail.trim()) return
+                    setIsInviting(true)
+                    try {
+                      const supabase = createClient()
+                      const { data: invitedProfile } = await supabase
+                        .from("profiles")
+                        .select("id")
+                        .eq("email", inviteEmail.trim())
+                        .single()
+
+                      if (!invitedProfile) {
+                        alert("Usuário não encontrado com este email")
+                        return
+                      }
+
+                      await supabase.from("adventure_members").insert({
+                        adventure_id: adventure.id,
+                        profile_id: invitedProfile.id,
+                        role: "player",
+                      })
+
+                      alert("Convite enviado com sucesso!")
+                      setInviteEmail("")
+                      setShowSettings(false)
+                      router.refresh()
+                    } catch (error) {
+                      console.error("Erro ao convidar:", error)
+                      alert("Erro ao enviar convite")
+                    } finally {
+                      setIsInviting(false)
+                    }
+                  }}
                   disabled={isInviting || !inviteEmail.trim()}
                   className="bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13]"
                 >
@@ -233,7 +278,6 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
               </div>
             </div>
 
-            {/* Desativar campanha */}
             <div className="space-y-3 pt-4 border-t border-[#302831]">
               <Label className="text-[#E7D1B1]">Zona de Perigo</Label>
               <Button

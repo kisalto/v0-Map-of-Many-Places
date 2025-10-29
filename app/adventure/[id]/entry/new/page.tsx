@@ -56,38 +56,39 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
           content: content,
           status: "pending",
           order_index: nextOrderIndex,
+          completed: false,
         })
         .select()
         .single()
 
       if (error) {
         console.error("[v0] Error creating entry:", error)
-        throw error
+        alert(`Erro ao salvar: ${error.message}`)
+        return
       }
 
       console.log("[v0] Entry created successfully:", entry)
 
-      // Extract and save character mentions
       const characterMentions = extractMentions(content, "character")
       if (characterMentions.length > 0) {
         console.log("[v0] Saving character mentions:", characterMentions)
         const { error: mentionsError } = await supabase.from("character_mentions").insert(
           characterMentions.map((name) => ({
             task_id: entry.id,
-            character_name: name,
+            mention_text: name,
+            character_type: "npc",
           })),
         )
         if (mentionsError) console.error("[v0] Error saving character mentions:", mentionsError)
       }
 
-      // Extract and save region mentions
       const regionMentions = extractMentions(content, "region")
       if (regionMentions.length > 0) {
         console.log("[v0] Saving region mentions:", regionMentions)
         const { error: mentionsError } = await supabase.from("region_mentions").insert(
           regionMentions.map((name) => ({
             task_id: entry.id,
-            region_name: name,
+            mention_text: name,
           })),
         )
         if (mentionsError) console.error("[v0] Error saving region mentions:", mentionsError)

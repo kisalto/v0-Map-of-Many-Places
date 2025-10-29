@@ -47,12 +47,8 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
         data: { user },
       } = await supabase.auth.getUser()
 
-      if (!user) {
-        console.error("[v0] No user logged in")
-        return
-      }
-
-      console.log("[v0] Current user ID:", user.id)
+      const creatorId = user?.id || "00000000-0000-0000-0000-000000000000"
+      console.log("[v0] Creator ID:", creatorId, user ? "(from logged user)" : "(default fallback)")
 
       const { data: allChars } = await supabase.from("characters").select("id, name").eq("adventure_id", adventureId)
 
@@ -79,7 +75,7 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
           content: content,
           is_task: true,
           order_index: nextOrderIndex,
-          creator_id: user.id,
+          creator_id: creatorId,
         })
         .select()
         .single()

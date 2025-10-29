@@ -72,6 +72,10 @@ export function RichTextEditor({ value, onChange, adventureId }: RichTextEditorP
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     const text = e.currentTarget.textContent || ""
+
+    // Previne múltiplas chamadas do onChange
+    if (text === value) return
+
     onChange(text)
 
     // Get cursor position
@@ -169,46 +173,6 @@ export function RichTextEditor({ value, onChange, adventureId }: RichTextEditorP
     }, 0)
   }
 
-  // Render text with highlighted mentions
-  const renderContent = () => {
-    if (!value) return null
-
-    const parts: React.ReactNode[] = []
-    let lastIndex = 0
-
-    // Find all mentions
-    const mentionRegex = /(@|#)([^\s.,!?]+)/g
-    let match
-
-    while ((match = mentionRegex.exec(value)) !== null) {
-      // Add text before mention
-      if (match.index > lastIndex) {
-        parts.push(value.slice(lastIndex, match.index))
-      }
-
-      // Add highlighted mention
-      const isCharacter = match[1] === "@"
-      parts.push(
-        <span
-          key={match.index}
-          className={`${isCharacter ? "text-[#EE9B3A]" : "text-[#84E557]"} font-medium`}
-          contentEditable={false}
-        >
-          {match[0]}
-        </span>,
-      )
-
-      lastIndex = match.index + match[0].length
-    }
-
-    // Add remaining text
-    if (lastIndex < value.length) {
-      parts.push(value.slice(lastIndex))
-    }
-
-    return parts
-  }
-
   return (
     <div className="relative">
       <div
@@ -220,7 +184,7 @@ export function RichTextEditor({ value, onChange, adventureId }: RichTextEditorP
         style={{ whiteSpace: "pre-wrap" }}
         suppressContentEditableWarning
       >
-        {renderContent()}
+        {value}
       </div>
 
       {/* Suggestions dropdown */}

@@ -115,19 +115,24 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
             character_type: "npc",
           }))
 
-          console.log("[v0] Inserting character mentions:", mentionsToInsert)
+          console.log("[v0] About to insert character mentions:")
+          console.log("[v0] Data structure:", JSON.stringify(mentionsToInsert, null, 2))
 
           const { data: insertedMentions, error: mentionError } = await supabase
             .from("character_mentions")
             .insert(mentionsToInsert)
             .select()
 
-          console.log("[v0] Character mentions insert result:", { insertedMentions, mentionError })
-
           if (mentionError) {
-            console.error("[v0] Error saving character mentions:", mentionError)
+            console.error("[v0] ❌ Error saving character mentions:")
+            console.error("[v0] Error object:", JSON.stringify(mentionError, null, 2))
+            console.error("[v0] Error message:", mentionError.message)
+            console.error("[v0] Error details:", mentionError.details)
+            console.error("[v0] Error hint:", mentionError.hint)
+            console.error("[v0] Error code:", mentionError.code)
           } else {
             console.log("[v0] ✅ Character mentions saved successfully!")
+            console.log("[v0] Inserted mentions:", insertedMentions)
           }
         } else {
           console.log("[v0] ❌ No characters found matching the mentions")
@@ -162,19 +167,24 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
             mention_text: region.name,
           }))
 
-          console.log("[v0] Inserting region mentions:", mentionsToInsert)
+          console.log("[v0] About to insert region mentions:")
+          console.log("[v0] Data structure:", JSON.stringify(mentionsToInsert, null, 2))
 
           const { data: insertedMentions, error: mentionError } = await supabase
             .from("region_mentions")
             .insert(mentionsToInsert)
             .select()
 
-          console.log("[v0] Region mentions insert result:", { insertedMentions, mentionError })
-
           if (mentionError) {
-            console.error("[v0] Error saving region mentions:", mentionError)
+            console.error("[v0] ❌ Error saving region mentions:")
+            console.error("[v0] Error object:", JSON.stringify(mentionError, null, 2))
+            console.error("[v0] Error message:", mentionError.message)
+            console.error("[v0] Error details:", mentionError.details)
+            console.error("[v0] Error hint:", mentionError.hint)
+            console.error("[v0] Error code:", mentionError.code)
           } else {
             console.log("[v0] ✅ Region mentions saved successfully!")
+            console.log("[v0] Inserted mentions:", insertedMentions)
           }
         } else {
           console.log("[v0] ❌ No regions found matching the mentions")
@@ -187,7 +197,7 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
       router.push(`/adventure/${adventureId}`)
       router.refresh()
     } catch (error) {
-      console.error("[v0] Error saving entry:", error)
+      console.error("[v0] Unexpected error saving entry:", error)
     } finally {
       setSaving(false)
     }

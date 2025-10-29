@@ -146,7 +146,7 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
                 onClick={handleToggleDeleteMode}
                 disabled={!isActive}
                 variant="outline"
-                className="border-[#EE9B3A]/30 text-[#EE9B3A] hover:bg-[#EE9B3A]/10 bg-transparent"
+                className="border-[#EE9B3A]/50 text-[#EE9B3A] hover:bg-[#EE9B3A]/20 hover:border-[#EE9B3A] bg-transparent"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Remover Região

@@ -43,6 +43,17 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
       console.log("[v0] Title:", title)
       console.log("[v0] Content:", content)
 
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        console.error("[v0] No user logged in")
+        return
+      }
+
+      console.log("[v0] Current user ID:", user.id)
+
       const { data: allChars } = await supabase.from("characters").select("id, name").eq("adventure_id", adventureId)
 
       const { data: allRegions } = await supabase.from("regions").select("id, name").eq("adventure_id", adventureId)
@@ -68,16 +79,22 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
           content: content,
           is_task: true,
           order_index: nextOrderIndex,
+          creator_id: user.id,
         })
         .select()
         .single()
 
       if (timelineError) {
-        console.error("[v0] Error creating timeline entry:", timelineError)
+        console.error("[v0] ❌ Error creating timeline entry:")
+        console.error("[v0] Error object:", JSON.stringify(timelineError, null, 2))
+        console.error("[v0] Error message:", timelineError.message)
+        console.error("[v0] Error details:", timelineError.details)
+        console.error("[v0] Error hint:", timelineError.hint)
+        console.error("[v0] Error code:", timelineError.code)
         return
       }
 
-      console.log("[v0] Timeline entry created successfully:", timelineEntry)
+      console.log("[v0] ✅ Timeline entry created successfully:", timelineEntry)
 
       const { data: entry, error } = await supabase
         .from("tasks")

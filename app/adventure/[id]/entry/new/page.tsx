@@ -80,6 +80,8 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
 
       console.log("[v0] Entry created successfully:", entry)
 
+      const timelineEntryId = entry.timeline_entry_id || null
+
       const characterMentions = extractMentions(content, "character")
       const regionMentions = extractMentions(content, "region")
 
@@ -97,9 +99,10 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
             if (character) {
               return {
                 task_id: entry.id,
+                timeline_entry_id: timelineEntryId,
                 character_id: character.id,
                 mention_text: mentionText,
-                character_type: "character", // Pode ser "npc", "player", etc.
+                character_type: "character",
               }
             }
             return null
@@ -140,6 +143,7 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
             if (region) {
               return {
                 task_id: entry.id,
+                timeline_entry_id: timelineEntryId,
                 region_id: region.id,
                 mention_text: mentionText,
               }

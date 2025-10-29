@@ -53,6 +53,9 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
 
       if (error) throw error
 
+      const { data: taskData } = await supabase.from("tasks").select("timeline_entry_id").eq("id", entryId).single()
+      const timelineEntryId = taskData?.timeline_entry_id || null
+
       await supabase.from("character_mentions").delete().eq("task_id", entryId)
       await supabase.from("region_mentions").delete().eq("task_id", entryId)
 
@@ -71,6 +74,7 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
         if (characters && characters.length > 0) {
           const characterMentionsToInsert = characters.map((char) => ({
             task_id: entryId,
+            timeline_entry_id: timelineEntryId,
             character_id: char.id,
             mention_text: char.name,
             character_type: "character",
@@ -101,6 +105,7 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
         if (regions && regions.length > 0) {
           const regionMentionsToInsert = regions.map((region) => ({
             task_id: entryId,
+            timeline_entry_id: timelineEntryId,
             region_id: region.id,
             mention_text: region.name,
           }))

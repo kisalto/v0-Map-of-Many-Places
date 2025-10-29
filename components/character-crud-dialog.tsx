@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
 import { ImageUpload } from "@/components/image-upload"
 import { Separator } from "@/components/ui/separator"
-import { Link2 } from "lucide-react"
+import { Link2, RefreshCw } from "lucide-react"
 
 interface Character {
   id: string
@@ -65,15 +65,23 @@ export function CharacterCrudDialog({
     try {
       const supabase = createClient()
 
-      console.log("[v0] Loading mentions for character ID:", characterId)
+      console.log("[v0] ========== LOADING MENTIONS ==========")
+      console.log("[v0] Character ID:", characterId)
+
+      const { data: allMentions, error: allError } = await supabase.from("character_mentions").select("*").limit(10)
+
+      console.log("[v0] All character_mentions in database (first 10):", allMentions, "Error:", allError)
 
       const { data: mentionsData, error } = await supabase
         .from("character_mentions")
-        .select("id, task_id, mention_text, created_at")
+        .select("id, task_id, mention_text, created_at, character_id")
         .eq("character_id", characterId)
         .order("created_at", { ascending: false })
 
-      console.log("[v0] Character mentions query result:", { mentionsData, error })
+      console.log("[v0] Character mentions query result:")
+      console.log("  - Data:", mentionsData)
+      console.log("  - Error:", error)
+      console.log("  - Count:", mentionsData?.length || 0)
 
       if (error) {
         console.error("[v0] Error loading mentions:", error)
@@ -92,7 +100,9 @@ export function CharacterCrudDialog({
             .select("id, title, created_at")
             .in("id", taskIds)
 
-          console.log("[v0] Tasks query result:", { tasksData, tasksError })
+          console.log("[v0] Tasks query result:")
+          console.log("  - Data:", tasksData)
+          console.log("  - Error:", tasksError)
 
           const mentionsWithTasks = mentionsData.map((mention) => ({
             ...mention,
@@ -110,6 +120,7 @@ export function CharacterCrudDialog({
         console.log("[v0] No mentions found for this character")
         setMentions([])
       }
+      console.log("[v0] ========== END LOADING MENTIONS ==========")
     } catch (error) {
       console.error("[v0] Error loading mentions:", error)
       setMentions([])
@@ -221,9 +232,20 @@ export function CharacterCrudDialog({
             <>
               <Separator className="bg-[#302831]" />
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Link2 className="h-4 w-4 text-[#60A5FA]" />
-                  <Label className="text-[#E7D1B1]">Aparições</Label>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Link2 className="h-4 w-4 text-[#60A5FA]" />
+                    <Label className="text-[#E7D1B1]">Aparições</Label>
+                  </div>
+                  <Button
+                    onClick={() => loadMentions(character.id)}
+                    variant="ghost"
+                    size="sm"
+                    className="text-[#60A5FA] hover:text-[#60A5FA]/80 hover:bg-[#60A5FA]/10"
+                  >
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                    Recarregar
+                  </Button>
                 </div>
 
                 {loadingMentions ? (
@@ -250,7 +272,12 @@ export function CharacterCrudDialog({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[#9F8475] text-sm">Nenhuma aparição registrada.</p>
+                  <div className="space-y-2">
+                    <p className="text-[#9F8475] text-sm">Nenhuma aparição registrada.</p>
+                    <p className="text-[#9F8475] text-xs">
+                      Verifique o console do navegador (F12) para logs de debug detalhados.
+                    </p>
+                  </div>
                 )}
               </div>
             </>

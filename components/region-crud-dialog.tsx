@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
 import { ImageUpload } from "@/components/image-upload"
-import { X, Link2 } from "lucide-react"
+import { X, Link2, RefreshCw } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 
 interface Region {
@@ -86,18 +86,28 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
     try {
       const supabase = createClient()
 
-      console.log("[v0] Loading mentions for region:", regionId)
+      console.log("[v0] ========== LOADING REGION MENTIONS ==========")
+      console.log("[v0] Region ID:", regionId)
+
+      const { data: allMentions, error: allError } = await supabase.from("region_mentions").select("*").limit(10)
+
+      console.log("[v0] All region_mentions in database (first 10):", allMentions, "Error:", allError)
 
       const { data: mentionsData, error } = await supabase
         .from("region_mentions")
-        .select("id, task_id, mention_text, created_at")
+        .select("id, task_id, mention_text, created_at, region_id")
         .eq("region_id", regionId)
         .order("created_at", { ascending: false })
 
-      console.log("[v0] Region mentions data:", mentionsData, "Error:", error)
+      console.log("[v0] Region mentions query result:")
+      console.log("  - Data:", mentionsData)
+      console.log("  - Error:", error)
+      console.log("  - Count:", mentionsData?.length || 0)
 
       if (mentionsData && mentionsData.length > 0) {
         const taskIds = mentionsData.map((m) => m.task_id).filter(Boolean)
+
+        console.log("[v0] Task IDs from mentions:", taskIds)
 
         if (taskIds.length > 0) {
           const { data: tasksData } = await supabase.from("tasks").select("id, title, created_at").in("id", taskIds)
@@ -114,8 +124,10 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
           setMentions([])
         }
       } else {
+        console.log("[v0] No mentions found for this region")
         setMentions([])
       }
+      console.log("[v0] ========== END LOADING REGION MENTIONS ==========")
     } catch (error) {
       console.error("[v0] Error loading region mentions:", error)
     } finally {
@@ -334,9 +346,20 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
               <Separator className="bg-[#302831]" />
 
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Link2 className="h-4 w-4 text-[#A78BFA]" />
-                  <Label className="text-[#E7D1B1]">Citações</Label>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Link2 className="h-4 w-4 text-[#A78BFA]" />
+                    <Label className="text-[#E7D1B1]">Citações</Label>
+                  </div>
+                  <Button
+                    onClick={() => loadMentions(region.id)}
+                    variant="ghost"
+                    size="sm"
+                    className="text-[#A78BFA] hover:text-[#A78BFA]/80 hover:bg-[#A78BFA]/10"
+                  >
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                    Recarregar
+                  </Button>
                 </div>
 
                 {loadingMentions ? (
@@ -363,7 +386,12 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[#9F8475] text-sm">Nenhuma citação encontrada.</p>
+                  <div className="space-y-2">
+                    <p className="text-[#9F8475] text-sm">Nenhuma citação encontrada.</p>
+                    <p className="text-[#9F8475] text-xs">
+                      Verifique o console do navegador (F12) para logs de debug detalhados.
+                    </p>
+                  </div>
                 )}
               </div>
             </>

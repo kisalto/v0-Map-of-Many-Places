@@ -159,8 +159,7 @@ export default function LoginPage() {
       }
 
       console.log("[v0] Redirecting to dashboard...")
-      router.push("/dashboard")
-      router.refresh()
+      window.location.href = "/dashboard"
       console.log("[v0] ========== LOGIN ATTEMPT END (SUCCESS) ==========")
     } catch (error: unknown) {
       console.error("[v0] ========== LOGIN ATTEMPT END (ERROR) ==========")

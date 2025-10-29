@@ -385,7 +385,7 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
           <Button
             onClick={() => onOpenChange(false)}
             variant="outline"
-            className="border-[#302831] text-[#E7D1B1] hover:bg-[#302831] bg-transparent"
+            className="border-[#302831] text-[#E7D1B1] hover:bg-[#302831]/80 bg-transparent"
           >
             Cancelar
           </Button>

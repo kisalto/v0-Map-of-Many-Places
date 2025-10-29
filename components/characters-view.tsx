@@ -158,7 +158,7 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
               <Button
                 onClick={handleCancelDelete}
                 variant="outline"
-                className="border-[#302831] text-[#E7D1B1] hover:bg-[#302831] bg-transparent"
+                className="border-[#302831] text-[#E7D1B1] hover:bg-[#302831]/70 bg-transparent"
               >
                 <X className="h-4 w-4 mr-2" />
                 Cancelar
@@ -181,7 +181,7 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
           <Card
             key={character.id}
             onClick={() => !isDeleteMode && handleSelectCharacter(character)}
-            className="bg-[#302831] border-[#EE9B3A]/30 hover:bg-[#302831]/80 transition-all cursor-pointer group relative"
+            className="bg-[#302831] border-[#EE9B3A]/30 hover:bg-[#302831]/70 transition-all cursor-pointer group relative"
           >
             {isDeleteMode && (
               <div
@@ -227,7 +227,7 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-transparent border-[#302831] text-[#E7D1B1] hover:bg-[#302831]">
+            <AlertDialogCancel className="bg-transparent border-[#302831] text-[#E7D1B1] hover:bg-[#302831]/70">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-600 text-white">

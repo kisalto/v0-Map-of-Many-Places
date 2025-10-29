@@ -157,7 +157,7 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
 
     setTimeout(() => {
       if (textareaRef.current) {
-        const cursorPos = mentionStart + item.name.length + 2
+        const cursorPos = mentionStart + prefix.length + item.name.length + 1
         textareaRef.current.setSelectionRange(cursorPos, cursorPos)
         textareaRef.current.focus()
       }
@@ -382,7 +382,7 @@ function renderColoredText(text: string) {
   const parts: React.ReactNode[] = []
   let lastIndex = 0
 
-  const mentionRegex = /(@[^@#\n.!?,;:]+)|(#[^@#\n.!?,;:]+)/g
+  const mentionRegex = /(@[^@#\n]+?)(?=\s|$|[.!?,;:])|(#[^@#\n]+?)(?=\s|$|[.!?,;:])/g
   let match
 
   while ((match = mentionRegex.exec(text)) !== null) {
@@ -397,7 +397,14 @@ function renderColoredText(text: string) {
     const mention = match[0].trim()
     const isCharacter = mention.startsWith("@")
     parts.push(
-      <span key={`mention-${match.index}`} className={isCharacter ? "text-[#60A5FA]" : "text-[#A78BFA]"}>
+      <span
+        key={`mention-${match.index}`}
+        className={`${
+          isCharacter
+            ? "border border-[#60A5FA]/50 text-[#E7D1B1] rounded px-1"
+            : "border border-[#A78BFA]/50 text-[#E7D1B1] rounded px-1"
+        }`}
+      >
         {mention}
       </span>,
     )

@@ -157,7 +157,7 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
               <Button
                 onClick={handleCancelDelete}
                 variant="outline"
-                className="border-[#302831] text-[#E7D1B1] hover:bg-[#302831] bg-transparent"
+                className="border-[#302831] text-[#E7D1B1] hover:bg-[#302831]/70 bg-transparent"
               >
                 <X className="h-4 w-4 mr-2" />
                 Cancelar
@@ -180,7 +180,7 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
           <Card
             key={region.id}
             onClick={() => !isDeleteMode && handleSelectRegion(region)}
-            className="bg-[#302831] border-[#EE9B3A]/30 hover:bg-[#302831]/80 transition-all cursor-pointer group overflow-hidden relative"
+            className="bg-[#302831] border-[#EE9B3A]/30 hover:bg-[#302831]/70 transition-all cursor-pointer group overflow-hidden relative"
           >
             {isDeleteMode && (
               <div
@@ -223,7 +223,7 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-transparent border-[#302831] text-[#E7D1B1] hover:bg-[#302831]">
+            <AlertDialogCancel className="bg-transparent border-[#302831] text-[#E7D1B1] hover:bg-[#302831]/70">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-600 text-white">

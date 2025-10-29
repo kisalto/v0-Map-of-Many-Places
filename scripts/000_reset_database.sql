@@ -16,12 +16,18 @@ DROP TABLE IF EXISTS chapters CASCADE;
 DROP TABLE IF EXISTS adventures CASCADE;
 DROP TABLE IF EXISTS profiles CASCADE;
 
+-- Dropar funções existentes
+DROP FUNCTION IF EXISTS get_email_by_username(TEXT);
+DROP FUNCTION IF EXISTS handle_new_user();
+
 -- =====================================================
 -- TABELA: profiles
 -- =====================================================
 CREATE TABLE profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT UNIQUE NOT NULL,
+  username TEXT UNIQUE,
+  display_name TEXT,
   full_name TEXT,
   avatar_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -31,6 +37,10 @@ CREATE TABLE profiles (
 -- RLS para profiles
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "profiles_select_own" ON profiles;
+DROP POLICY IF EXISTS "profiles_insert_own" ON profiles;
+DROP POLICY IF EXISTS "profiles_update_own" ON profiles;
+
 CREATE POLICY "profiles_select_own" ON profiles
   FOR SELECT USING (auth.uid() = id);
 
@@ -39,6 +49,45 @@ CREATE POLICY "profiles_insert_own" ON profiles
 
 CREATE POLICY "profiles_update_own" ON profiles
   FOR UPDATE USING (auth.uid() = id);
+
+-- =====================================================
+-- FUNÇÃO: get_email_by_username
+-- =====================================================
+CREATE OR REPLACE FUNCTION get_email_by_username(username_input TEXT)
+RETURNS TEXT AS $$
+DECLARE
+  user_email TEXT;
+BEGIN
+  SELECT email INTO user_email
+  FROM profiles
+  WHERE username = username_input;
+  
+  RETURN user_email;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- =====================================================
+-- FUNÇÃO: handle_new_user (trigger para criar profile automaticamente)
+-- =====================================================
+CREATE OR REPLACE FUNCTION handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, username, display_name)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    NEW.raw_user_meta_data->>'username',
+    NEW.raw_user_meta_data->>'display_name'
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger para criar profile automaticamente quando usuário se registra
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
 -- =====================================================
 -- TABELA: adventures
@@ -56,6 +105,11 @@ CREATE TABLE adventures (
 
 -- RLS para adventures
 ALTER TABLE adventures ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "adventures_select_own" ON adventures;
+DROP POLICY IF EXISTS "adventures_insert_own" ON adventures;
+DROP POLICY IF EXISTS "adventures_update_own" ON adventures;
+DROP POLICY IF EXISTS "adventures_delete_own" ON adventures;
 
 CREATE POLICY "adventures_select_own" ON adventures
   FOR SELECT USING (auth.uid() = creator_id);

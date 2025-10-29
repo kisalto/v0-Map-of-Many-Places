@@ -41,6 +41,7 @@ export function CharacterCrudDialog({
   const [saving, setSaving] = useState(false)
   const [mentions, setMentions] = useState<any[]>([])
   const [loadingMentions, setLoadingMentions] = useState(false)
+  const [allCharacters, setAllCharacters] = useState<any[]>([])
 
   useEffect(() => {
     if (open && character) {
@@ -57,6 +58,7 @@ export function CharacterCrudDialog({
       setHistory("")
       setImageUrl("")
       setMentions([])
+      loadAllCharacters()
     }
   }, [character, open])
 
@@ -67,10 +69,6 @@ export function CharacterCrudDialog({
 
       console.log("[v0] ========== LOADING MENTIONS ==========")
       console.log("[v0] Character ID:", characterId)
-
-      const { data: allMentions, error: allError } = await supabase.from("character_mentions").select("*").limit(10)
-
-      console.log("[v0] All character_mentions in database (first 10):", allMentions, "Error:", allError)
 
       const { data: mentionsData, error } = await supabase
         .from("character_mentions")
@@ -126,6 +124,32 @@ export function CharacterCrudDialog({
       setMentions([])
     } finally {
       setLoadingMentions(false)
+    }
+  }
+
+  const loadAllCharacters = async () => {
+    try {
+      const supabase = createClient()
+
+      console.log("[v0] ========== LOADING ALL CHARACTERS ==========")
+
+      const { data: allCharsData, error: allCharsError } = await supabase
+        .from("characters")
+        .select("id, name")
+        .eq("adventure_id", adventureId)
+
+      console.log("[v0] All characters in database:", allCharsData, "Error:", allCharsError)
+
+      if (allCharsError) {
+        console.error("[v0] Error loading all characters:", allCharsError)
+        setAllCharacters([])
+        return
+      }
+
+      setAllCharacters(allCharsData || [])
+    } catch (error) {
+      console.error("[v0] Error loading all characters:", error)
+      setAllCharacters([])
     }
   }
 

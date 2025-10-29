@@ -43,109 +43,222 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
   }, [adventureId, entryId])
 
   const handleSave = async () => {
-    if (!title.trim()) return
+    console.log("[v0] ========== SAVE EDIT ENTRY START ==========")
+
+    if (!title || !title.trim()) {
+      console.error("[v0] Validation failed: title is empty")
+      alert("Por favor, insira um título para a anotação")
+      return
+    }
+
+    if (!entryId) {
+      console.error("[v0] Validation failed: entryId is missing")
+      alert("Erro: ID da anotação não identificado")
+      return
+    }
+
+    if (!adventureId) {
+      console.error("[v0] Validation failed: adventureId is missing")
+      alert("Erro: Aventura não identificada")
+      return
+    }
+
+    console.log("[v0] Validation passed, updating entry...")
+    console.log("[v0] Entry data:", {
+      entryId,
+      title: title.substring(0, 20) + "...",
+      contentLength: content.length,
+      adventureId,
+    })
 
     setSaving(true)
     const supabase = createClient()
 
     try {
+      console.log("[v0] Updating task...")
       const { error: taskError } = await supabase
         .from("tasks")
         .update({ title: title.trim(), content: content })
         .eq("id", entryId)
 
-      if (taskError) throw taskError
+      if (taskError) {
+        console.error("[v0] Error updating task:", taskError)
+        throw taskError
+      }
 
-      const { data: existingEntry } = await supabase
+      console.log("[v0] Task updated successfully")
+
+      console.log("[v0] Fetching task data for timeline entry...")
+      const { data: taskData, error: taskFetchError } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("id", entryId)
+        .single()
+
+      if (taskFetchError || !taskData) {
+        console.error("[v0] Error fetching task data:", taskFetchError)
+        throw taskFetchError || new Error("Task não encontrada")
+      }
+
+      console.log("[v0] Task data fetched:", { chapterId: taskData.chapter_id })
+
+      console.log("[v0] Checking for existing timeline entry...")
+      const { data: existingEntry, error: entryFetchError } = await supabase
         .from("timeline_entries")
         .select("id")
-        .eq(
-          "chapter_id",
-          (await supabase.from("tasks").select("chapter_id").eq("id", entryId).single()).data?.chapter_id,
-        )
+        .eq("chapter_id", taskData.chapter_id)
         .eq("title", title.trim())
         .eq("is_task", true)
         .maybeSingle()
 
+      if (entryFetchError) {
+        console.error("[v0] Error checking timeline entry:", entryFetchError)
+      }
+
       let timelineEntryId = existingEntry?.id
+      console.log("[v0] Existing timeline entry:", timelineEntryId || "none")
 
       if (!timelineEntryId) {
-        const { data: taskData } = await supabase.from("tasks").select("*").eq("id", entryId).single()
-
+        console.log("[v0] Creating new timeline entry...")
         const { data: newEntry, error: entryError } = await supabase
           .from("timeline_entries")
           .insert({
             adventure_id: adventureId,
-            chapter_id: taskData?.chapter_id,
+            chapter_id: taskData.chapter_id,
             title: title.trim(),
             content: content,
             is_task: true,
-            order_index: taskData?.order_index || 0,
+            order_index: taskData.order_index || 0,
             creator_id: "00000000-0000-0000-0000-000000000000",
           })
           .select()
           .single()
 
-        if (entryError) throw entryError
+        if (entryError) {
+          console.error("[v0] Error creating timeline entry:", entryError)
+          throw entryError
+        }
+
+        if (!newEntry) {
+          console.error("[v0] No timeline entry data returned")
+          throw new Error("Erro ao criar entrada na timeline")
+        }
+
         timelineEntryId = newEntry.id
+        console.log("[v0] Timeline entry created:", timelineEntryId)
       } else {
-        await supabase
+        console.log("[v0] Updating existing timeline entry...")
+        const { error: updateError } = await supabase
           .from("timeline_entries")
           .update({ title: title.trim(), content: content })
           .eq("id", timelineEntryId)
+
+        if (updateError) {
+          console.error("[v0] Error updating timeline entry:", updateError)
+        } else {
+          console.log("[v0] Timeline entry updated successfully")
+        }
       }
 
-      await supabase.from("character_mentions").delete().eq("task_id", entryId)
-      await supabase.from("region_mentions").delete().eq("task_id", entryId)
+      console.log("[v0] Deleting old mentions...")
+      const { error: deleteCharError } = await supabase.from("character_mentions").delete().eq("task_id", entryId)
+      const { error: deleteRegError } = await supabase.from("region_mentions").delete().eq("task_id", entryId)
 
+      if (deleteCharError) console.error("[v0] Error deleting character mentions:", deleteCharError)
+      if (deleteRegError) console.error("[v0] Error deleting region mentions:", deleteRegError)
+
+      console.log("[v0] Old mentions deleted")
+
+      console.log("[v0] Extracting mentions from content...")
       const characterMentions = content.match(/@[^\s@#]+/g) || []
       const regionMentions = content.match(/#[^\s@#]+/g) || []
 
+      console.log("[v0] Found mentions:", {
+        characters: characterMentions.length,
+        regions: regionMentions.length,
+      })
+
       if (characterMentions.length > 0) {
+        console.log("[v0] Processing character mentions...")
         const characterNames = characterMentions.map((m) => m.slice(1))
-        const { data: characters } = await supabase
+        console.log("[v0] Character names:", characterNames)
+
+        const { data: characters, error: charError } = await supabase
           .from("characters")
           .select("id, name")
           .eq("adventure_id", adventureId)
           .in("name", characterNames)
 
-        if (characters && characters.length > 0) {
-          const mentionsToInsert = characters.map((char) => ({
-            timeline_entry_id: timelineEntryId,
-            task_id: entryId,
-            character_id: char.id,
-            mention_text: `@${char.name}`,
-          }))
+        if (charError) {
+          console.error("[v0] Error fetching characters:", charError)
+        } else {
+          console.log("[v0] Found characters:", characters?.length || 0)
 
-          await supabase.from("character_mentions").insert(mentionsToInsert)
+          if (characters && characters.length > 0) {
+            const mentionsToInsert = characters.map((char) => ({
+              timeline_entry_id: timelineEntryId,
+              task_id: entryId,
+              character_id: char.id,
+              mention_text: `@${char.name}`,
+            }))
+
+            console.log("[v0] Inserting character mentions:", mentionsToInsert.length)
+            const { error: insertError } = await supabase.from("character_mentions").insert(mentionsToInsert)
+
+            if (insertError) {
+              console.error("[v0] Error inserting character mentions:", insertError)
+            } else {
+              console.log("[v0] Character mentions saved successfully")
+            }
+          }
         }
       }
 
       if (regionMentions.length > 0) {
+        console.log("[v0] Processing region mentions...")
         const regionNames = regionMentions.map((m) => m.slice(1))
-        const { data: regions } = await supabase
+        console.log("[v0] Region names:", regionNames)
+
+        const { data: regions, error: regError } = await supabase
           .from("regions")
           .select("id, name")
           .eq("adventure_id", adventureId)
           .in("name", regionNames)
 
-        if (regions && regions.length > 0) {
-          const mentionsToInsert = regions.map((region) => ({
-            timeline_entry_id: timelineEntryId,
-            task_id: entryId,
-            region_id: region.id,
-            mention_text: `#${region.name}`,
-          }))
+        if (regError) {
+          console.error("[v0] Error fetching regions:", regError)
+        } else {
+          console.log("[v0] Found regions:", regions?.length || 0)
 
-          await supabase.from("region_mentions").insert(mentionsToInsert)
+          if (regions && regions.length > 0) {
+            const mentionsToInsert = regions.map((region) => ({
+              timeline_entry_id: timelineEntryId,
+              task_id: entryId,
+              region_id: region.id,
+              mention_text: `#${region.name}`,
+            }))
+
+            console.log("[v0] Inserting region mentions:", mentionsToInsert.length)
+            const { error: insertError } = await supabase.from("region_mentions").insert(mentionsToInsert)
+
+            if (insertError) {
+              console.error("[v0] Error inserting region mentions:", insertError)
+            } else {
+              console.log("[v0] Region mentions saved successfully")
+            }
+          }
         }
       }
 
+      console.log("[v0] Entry updated successfully, redirecting...")
       setShowSaveConfirm(false)
       router.push(`/adventure/${adventureId}`)
       router.refresh()
+      console.log("[v0] ========== SAVE EDIT ENTRY END (SUCCESS) ==========")
     } catch (error) {
-      console.error("Error saving entry:", error)
+      console.error("[v0] ========== SAVE EDIT ENTRY END (ERROR) ==========")
+      console.error("[v0] Save error details:", error)
+      alert("Erro ao salvar alterações: " + (error instanceof Error ? error.message : "Erro desconhecido"))
     } finally {
       setSaving(false)
     }

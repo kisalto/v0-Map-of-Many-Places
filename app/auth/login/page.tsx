@@ -18,53 +18,128 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log("[v0] ========== LOGIN ATTEMPT START ==========")
+
+    if (!identifier || !identifier.trim()) {
+      console.error("[v0] Validation failed: identifier is empty")
+      setError("Por favor, insira seu email ou nome de login")
+      return
+    }
+
+    if (!password || password.length < 6) {
+      console.error("[v0] Validation failed: password too short")
+      setError("A senha deve ter pelo menos 6 caracteres")
+      return
+    }
+
     const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
     try {
       const isEmail = identifier.includes("@")
-      console.log("[v0] Login attempt with:", { identifier, isEmail })
+      console.log("[v0] Login attempt with:", {
+        identifier: identifier.substring(0, 3) + "***",
+        isEmail,
+        identifierLength: identifier.length,
+        passwordLength: password.length,
+      })
 
       if (isEmail) {
-        console.log("[v0] Logging in with email")
-        const { error } = await supabase.auth.signInWithPassword({
+        console.log("[v0] Attempting email login...")
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(identifier)) {
+          console.error("[v0] Invalid email format:", identifier)
+          throw new Error("Formato de email inválido")
+        }
+
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: identifier,
           password,
         })
+
+        console.log("[v0] Email login response:", {
+          success: !error,
+          hasUser: !!data?.user,
+          userId: data?.user?.id,
+          error: error?.message,
+        })
+
         if (error) {
           console.error("[v0] Email login error:", error)
           throw error
         }
+
+        if (!data?.user) {
+          console.error("[v0] No user data returned after login")
+          throw new Error("Erro ao autenticar usuário")
+        }
+
+        console.log("[v0] Email login successful for user:", data.user.id)
       } else {
-        console.log("[v0] Looking up email by username:", identifier)
+        console.log("[v0] Attempting username login...")
+        console.log("[v0] Looking up email by username:", identifier.substring(0, 3) + "***")
+
+        if (identifier.length < 3) {
+          console.error("[v0] Username too short:", identifier.length)
+          throw new Error("Nome de login deve ter pelo menos 3 caracteres")
+        }
+
         const { data: emailData, error: emailError } = await supabase.rpc("get_email_by_username", {
           username_input: identifier,
         })
 
-        console.log("[v0] RPC result:", { emailData, emailError })
+        console.log("[v0] RPC get_email_by_username result:", {
+          success: !emailError,
+          hasEmail: !!emailData,
+          email: emailData ? emailData.substring(0, 3) + "***" : null,
+          error: emailError?.message,
+        })
 
-        if (emailError || !emailData) {
-          console.error("[v0] Username lookup failed:", emailError)
+        if (emailError) {
+          console.error("[v0] RPC error:", emailError)
+          throw new Error("Erro ao buscar usuário: " + emailError.message)
+        }
+
+        if (!emailData) {
+          console.error("[v0] Username not found:", identifier)
           throw new Error("Nome de usuário não encontrado")
         }
 
-        console.log("[v0] Found email, logging in:", emailData)
-        const { error } = await supabase.auth.signInWithPassword({
+        console.log("[v0] Found email for username, attempting login...")
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: emailData,
           password,
         })
+
+        console.log("[v0] Username login response:", {
+          success: !error,
+          hasUser: !!data?.user,
+          userId: data?.user?.id,
+          error: error?.message,
+        })
+
         if (error) {
           console.error("[v0] Password login error:", error)
           throw error
         }
+
+        if (!data?.user) {
+          console.error("[v0] No user data returned after username login")
+          throw new Error("Erro ao autenticar usuário")
+        }
+
+        console.log("[v0] Username login successful for user:", data.user.id)
       }
 
       console.log("[v0] Login successful, redirecting to dashboard")
       router.push("/dashboard")
       router.refresh()
+      console.log("[v0] ========== LOGIN ATTEMPT END (SUCCESS) ==========")
     } catch (error: unknown) {
-      console.error("[v0] Login error:", error)
+      console.error("[v0] ========== LOGIN ATTEMPT END (ERROR) ==========")
+      console.error("[v0] Login error details:", error)
       setError(error instanceof Error ? error.message : "Erro ao fazer login")
     } finally {
       setIsLoading(false)

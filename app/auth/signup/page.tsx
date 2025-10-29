@@ -13,39 +13,99 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [username, setUsername] = useState("") // Nome de Usuário (display name)
-  const [loginName, setLoginName] = useState("") // Nome de Login (unique identifier)
+  const [username, setUsername] = useState("")
+  const [loginName, setLoginName] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log("[v0] ========== SIGNUP ATTEMPT START ==========")
+
     const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
-    if (password !== confirmPassword) {
-      setError("As senhas não coincidem")
+    console.log("[v0] Validating input fields...")
+
+    if (!email || !email.trim()) {
+      console.error("[v0] Validation failed: email is empty")
+      setError("Por favor, insira seu email")
       setIsLoading(false)
       return
     }
 
-    if (password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres")
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      console.error("[v0] Validation failed: invalid email format")
+      setError("Formato de email inválido")
       setIsLoading(false)
       return
     }
 
-    if (loginName.length < 3) {
+    if (!username || username.trim().length < 2) {
+      console.error("[v0] Validation failed: username too short")
+      setError("O nome de usuário deve ter pelo menos 2 caracteres")
+      setIsLoading(false)
+      return
+    }
+
+    if (!loginName || loginName.trim().length < 3) {
+      console.error("[v0] Validation failed: loginName too short")
       setError("O nome de login deve ter pelo menos 3 caracteres")
       setIsLoading(false)
       return
     }
 
-    try {
-      console.log("[v0] Signing up with:", { email, username, loginName })
+    const loginNameRegex = /^[a-z0-9_]+$/
+    if (!loginNameRegex.test(loginName)) {
+      console.error("[v0] Validation failed: invalid loginName format")
+      setError("Nome de login deve conter apenas letras minúsculas, números e underscore")
+      setIsLoading(false)
+      return
+    }
 
+    if (!password || password.length < 6) {
+      console.error("[v0] Validation failed: password too short")
+      setError("A senha deve ter pelo menos 6 caracteres")
+      setIsLoading(false)
+      return
+    }
+
+    if (password !== confirmPassword) {
+      console.error("[v0] Validation failed: passwords don't match")
+      setError("As senhas não coincidem")
+      setIsLoading(false)
+      return
+    }
+
+    console.log("[v0] All validations passed")
+    console.log("[v0] Signup data:", {
+      email: email.substring(0, 3) + "***",
+      username: username.substring(0, 3) + "***",
+      loginName: loginName.substring(0, 3) + "***",
+      passwordLength: password.length,
+    })
+
+    try {
+      console.log("[v0] Checking if username already exists...")
+
+      const { data: existingUser, error: checkError } = await supabase.rpc("get_email_by_username", {
+        username_input: loginName,
+      })
+
+      console.log("[v0] Username check result:", {
+        exists: !!existingUser,
+        error: checkError?.message,
+      })
+
+      if (existingUser) {
+        console.error("[v0] Username already exists:", loginName)
+        throw new Error("Nome de login já está em uso")
+      }
+
+      console.log("[v0] Creating new user account...")
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -58,20 +118,34 @@ export default function SignUpPage() {
         },
       })
 
-      console.log("[v0] Signup result:", { data, error })
+      console.log("[v0] Signup response:", {
+        success: !error,
+        hasUser: !!data?.user,
+        userId: data?.user?.id,
+        needsConfirmation: !!data?.user && !data?.session,
+        error: error?.message,
+      })
 
       if (error) {
         console.error("[v0] Signup error:", error)
         if (error.message.includes("unique") || error.message.includes("duplicate")) {
-          throw new Error("Nome de login já está em uso")
+          throw new Error("Email ou nome de login já está em uso")
         }
         throw error
       }
 
-      console.log("[v0] Signup successful, redirecting")
+      if (!data?.user) {
+        console.error("[v0] No user data returned after signup")
+        throw new Error("Erro ao criar conta")
+      }
+
+      console.log("[v0] Signup successful for user:", data.user.id)
+      console.log("[v0] Redirecting to signup success page...")
       router.push("/auth/signup-success")
+      console.log("[v0] ========== SIGNUP ATTEMPT END (SUCCESS) ==========")
     } catch (error: unknown) {
-      console.error("[v0] Signup catch error:", error)
+      console.error("[v0] ========== SIGNUP ATTEMPT END (ERROR) ==========")
+      console.error("[v0] Signup error details:", error)
       setError(error instanceof Error ? error.message : "Ocorreu um erro")
     } finally {
       setIsLoading(false)

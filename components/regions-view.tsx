@@ -67,11 +67,7 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
 
     const supabase = createClient()
 
-    const { data: mentionsData } = await supabase
-      .from("region_mentions")
-      .select("*, tasks(*)")
-      .eq("region_name", region.name)
-    setMentions(mentionsData || [])
+    setMentions([])
 
     const { data: subregionsData } = await supabase
       .from("subregions")
@@ -284,25 +280,6 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
                   <p className="text-[#9F8475] text-sm">Nenhum ponto de interesse registrado.</p>
                 )}
               </div>
-            </div>
-
-            <div className="mt-6">
-              <h4 className="text-[#EE9B3A] font-serif mb-2">Aparições</h4>
-              {mentions.length > 0 ? (
-                <div className="space-y-2">
-                  {mentions.map((mention) => (
-                    <div
-                      key={mention.id}
-                      className="text-[#EE9B3A] hover:underline cursor-pointer text-sm"
-                      onClick={() => router.push(`/adventure/${adventure.id}/entry/${mention.task_id}`)}
-                    >
-                      {mention.tasks?.title || "Anotação sem título"}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-[#9F8475] text-sm">Nenhuma aparição registrada.</p>
-              )}
             </div>
           </DialogContent>
         </Dialog>

@@ -57,29 +57,7 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
 
   const handleSelectCharacter = async (character: Character) => {
     setSelectedCharacter(character)
-
-    const supabase = createClient()
-    const { data, error } = await supabase
-      .from("character_mentions")
-      .select("id, mention_text, task_id, created_at")
-      .eq("character_id", character.id)
-      .order("created_at", { ascending: false })
-
-    if (error) {
-      console.error("[v0] Error loading character mentions:", error)
-      setMentions([])
-    } else {
-      const mentionsWithTasks = await Promise.all(
-        (data || []).map(async (mention) => {
-          if (mention.task_id) {
-            const { data: task } = await supabase.from("tasks").select("id, title").eq("id", mention.task_id).single()
-            return { ...mention, task }
-          }
-          return mention
-        }),
-      )
-      setMentions(mentionsWithTasks)
-    }
+    setMentions([])
   }
 
   const handleEdit = (character: Character) => {
@@ -284,28 +262,6 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
                   <p className="text-[#E7D1B1] leading-relaxed text-sm">
                     {selectedCharacter.history || selectedCharacter.short_description || "Nenhuma história disponível."}
                   </p>
-                </div>
-                <div>
-                  <h4 className="text-[#EE9B3A] font-serif mb-2">Aparições</h4>
-                  {mentions.length > 0 ? (
-                    <div className="space-y-2">
-                      {mentions.map((mention) => (
-                        <div
-                          key={mention.id}
-                          className="text-[#EE9B3A] hover:underline cursor-pointer text-sm"
-                          onClick={() => {
-                            if (mention.task_id) {
-                              router.push(`/adventure/${adventure.id}/entry/${mention.task_id}`)
-                            }
-                          }}
-                        >
-                          {mention.task?.title || "Anotação sem título"}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-[#9F8475] text-sm">Nenhuma aparição registrada.</p>
-                  )}
                 </div>
               </div>
             </div>

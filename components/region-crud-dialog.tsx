@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
 import { ImageUpload } from "@/components/image-upload"
-import { X, Link2, RefreshCw } from "lucide-react"
+import { X } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 
 interface Region {
@@ -54,8 +54,6 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
   const [newSubregionName, setNewSubregionName] = useState("")
   const [newSubregionDesc, setNewSubregionDesc] = useState("")
   const [saving, setSaving] = useState(false)
-  const [mentions, setMentions] = useState<Mention[]>([])
-  const [loadingMentions, setLoadingMentions] = useState(false)
 
   useEffect(() => {
     if (region) {
@@ -64,14 +62,12 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
       setHistory(region.history || "")
       setImageUrl(region.image_url || "")
       loadSubregions(region.id)
-      loadMentions(region.id)
     } else {
       setName("")
       setDescription("")
       setHistory("")
       setImageUrl("")
       setSubregions([])
-      setMentions([])
     }
   }, [region, open])
 
@@ -79,56 +75,6 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
     const supabase = createClient()
     const { data } = await supabase.from("subregions").select("*").eq("region_id", regionId).order("created_at")
     setSubregions(data || [])
-  }
-
-  const loadMentions = async (regionId: string) => {
-    setLoadingMentions(true)
-    try {
-      const supabase = createClient()
-
-      console.log("[v0] ========== LOADING REGION MENTIONS ==========")
-      console.log("[v0] Region ID:", regionId)
-
-      const { data: mentionsData, error } = await supabase
-        .from("region_mentions")
-        .select("id, task_id, mention_text, created_at")
-        .eq("region_id", regionId)
-        .order("created_at", { ascending: false })
-
-      console.log("[v0] Region mentions query result:")
-      console.log("  - Data:", mentionsData)
-      console.log("  - Error:", error)
-      console.log("  - Count:", mentionsData?.length || 0)
-
-      if (mentionsData && mentionsData.length > 0) {
-        const taskIds = mentionsData.map((m) => m.task_id).filter(Boolean)
-
-        console.log("[v0] Task IDs from mentions:", taskIds)
-
-        if (taskIds.length > 0) {
-          const { data: tasksData } = await supabase.from("tasks").select("id, title, created_at").in("id", taskIds)
-
-          console.log("[v0] Tasks data for region mentions:", tasksData)
-
-          const mentionsWithTasks = mentionsData.map((mention) => ({
-            ...mention,
-            task: tasksData?.find((t) => t.id === mention.task_id),
-          }))
-
-          setMentions(mentionsWithTasks)
-        } else {
-          setMentions([])
-        }
-      } else {
-        console.log("[v0] No mentions found for this region")
-        setMentions([])
-      }
-      console.log("[v0] ========== END LOADING REGION MENTIONS ==========")
-    } catch (error) {
-      console.error("[v0] Error loading region mentions:", error)
-    } finally {
-      setLoadingMentions(false)
-    }
   }
 
   const handleAddSubregion = () => {
@@ -324,58 +270,6 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
                     Adicionar Região Interna
                   </Button>
                 </div>
-              </div>
-
-              <Separator className="bg-[#302831]" />
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Link2 className="h-4 w-4 text-[#A78BFA]" />
-                    <Label className="text-[#E7D1B1]">Citações</Label>
-                  </div>
-                  <Button
-                    onClick={() => loadMentions(region.id)}
-                    variant="ghost"
-                    size="sm"
-                    className="text-[#A78BFA] hover:text-[#A78BFA]/80 hover:bg-[#A78BFA]/10"
-                  >
-                    <RefreshCw className="h-3 w-3 mr-1" />
-                    Recarregar
-                  </Button>
-                </div>
-
-                {loadingMentions ? (
-                  <p className="text-[#9F8475] text-sm">Carregando citações...</p>
-                ) : mentions.length > 0 ? (
-                  <div className="space-y-2">
-                    {mentions.map((mention) => (
-                      <div
-                        key={mention.id}
-                        className="p-3 bg-[#0B0A13] rounded-lg border border-[#302831] hover:border-[#A78BFA]/30 transition-colors"
-                      >
-                        <p className="text-[#E7D1B1] font-medium text-sm">
-                          {mention.task?.title || "Anotação sem título"}
-                        </p>
-                        <p className="text-[#A78BFA] text-xs mt-1">#{mention.mention_text}</p>
-                        <p className="text-[#9F8475] text-xs mt-1">
-                          {new Date(mention.created_at).toLocaleDateString("pt-BR", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                          })}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <p className="text-[#9F8475] text-sm">Nenhuma citação encontrada.</p>
-                    <p className="text-[#9F8475] text-xs">
-                      Verifique o console do navegador (F12) para logs de debug detalhados.
-                    </p>
-                  </div>
-                )}
               </div>
             </>
           )}

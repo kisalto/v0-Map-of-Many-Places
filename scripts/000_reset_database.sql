@@ -27,8 +27,9 @@ DROP TABLE IF EXISTS profiles CASCADE;
 -- =====================================================
 -- TABELA: profiles
 -- =====================================================
+-- Removida foreign key constraint para auth.users para permitir criação de profiles independentemente
 CREATE TABLE profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   username TEXT UNIQUE,
   display_name TEXT,
@@ -69,7 +70,8 @@ BEGIN
     NEW.email,
     NEW.raw_user_meta_data->>'username',
     NEW.raw_user_meta_data->>'display_name'
-  );
+  )
+  ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

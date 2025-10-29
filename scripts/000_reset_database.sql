@@ -24,6 +24,7 @@ DROP TABLE IF EXISTS chapters CASCADE;
 DROP TABLE IF EXISTS adventures CASCADE;
 DROP TABLE IF EXISTS adventure_members CASCADE;
 DROP TABLE IF EXISTS profiles CASCADE;
+DROP TABLE IF EXISTS points_of_interest CASCADE;
 
 -- =====================================================
 -- TABELA: profiles
@@ -157,7 +158,8 @@ CREATE TABLE characters (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   adventure_id UUID NOT NULL REFERENCES adventures(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
-  description TEXT,
+  short_description TEXT,
+  history TEXT,
   image_url TEXT,
   character_type TEXT DEFAULT 'npc' CHECK (character_type IN ('player', 'npc')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -175,6 +177,7 @@ CREATE TABLE regions (
   adventure_id UUID NOT NULL REFERENCES adventures(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   description TEXT,
+  history TEXT,
   image_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -252,6 +255,23 @@ CREATE TABLE region_mentions (
 -- ALTER TABLE region_mentions ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
+-- TABELA: points_of_interest
+-- =====================================================
+-- Adicionada tabela points_of_interest para pontos de interesse em regiões
+CREATE TABLE points_of_interest (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  region_id UUID NOT NULL REFERENCES regions(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  image_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- RLS desabilitado para simplificar
+-- ALTER TABLE points_of_interest ENABLE ROW LEVEL SECURITY;
+
+-- =====================================================
 -- ÍNDICES PARA PERFORMANCE
 -- =====================================================
 
@@ -282,6 +302,9 @@ CREATE INDEX idx_regions_adventure ON regions(adventure_id);
 
 -- Índices para sub_regions
 CREATE INDEX idx_sub_regions_region ON sub_regions(region_id);
+
+-- Índices para points_of_interest
+CREATE INDEX idx_points_of_interest_region ON points_of_interest(region_id);
 
 -- Índices para timeline_entries
 CREATE INDEX idx_timeline_entries_adventure ON timeline_entries(adventure_id);
@@ -339,4 +362,7 @@ CREATE TRIGGER update_timeline_entries_updated_at BEFORE UPDATE ON timeline_entr
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_adventure_members_updated_at BEFORE UPDATE ON adventure_members
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_points_of_interest_updated_at BEFORE UPDATE ON points_of_interest
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

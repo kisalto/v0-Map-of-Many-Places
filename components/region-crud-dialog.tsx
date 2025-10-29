@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator"
 interface Region {
   id: string
   name: string
-  short_description: string | null
+  description: string | null
   history: string | null
   image_url: string | null
 }
@@ -33,6 +33,7 @@ interface Mention {
   task?: {
     id: string
     title: string
+    created_at: string
   }
 }
 
@@ -59,7 +60,7 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
   useEffect(() => {
     if (region) {
       setName(region.name)
-      setDescription(region.short_description || "")
+      setDescription(region.description || "")
       setHistory(region.history || "")
       setImageUrl(region.image_url || "")
       loadSubregions(region.id)
@@ -84,27 +85,39 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
     setLoadingMentions(true)
     try {
       const supabase = createClient()
-      const { data: mentionsData } = await supabase
+
+      console.log("[v0] Loading mentions for region:", regionId)
+
+      const { data: mentionsData, error } = await supabase
         .from("region_mentions")
         .select("id, task_id, mention_text, created_at")
         .eq("region_id", regionId)
         .order("created_at", { ascending: false })
 
+      console.log("[v0] Region mentions data:", mentionsData, "Error:", error)
+
       if (mentionsData && mentionsData.length > 0) {
-        const taskIds = mentionsData.map((m) => m.task_id)
-        const { data: tasksData } = await supabase.from("tasks").select("id, title").in("id", taskIds)
+        const taskIds = mentionsData.map((m) => m.task_id).filter(Boolean)
 
-        const mentionsWithTasks = mentionsData.map((mention) => ({
-          ...mention,
-          task: tasksData?.find((t) => t.id === mention.task_id),
-        }))
+        if (taskIds.length > 0) {
+          const { data: tasksData } = await supabase.from("tasks").select("id, title, created_at").in("id", taskIds)
 
-        setMentions(mentionsWithTasks)
+          console.log("[v0] Tasks data for region mentions:", tasksData)
+
+          const mentionsWithTasks = mentionsData.map((mention) => ({
+            ...mention,
+            task: tasksData?.find((t) => t.id === mention.task_id),
+          }))
+
+          setMentions(mentionsWithTasks)
+        } else {
+          setMentions([])
+        }
       } else {
         setMentions([])
       }
     } catch (error) {
-      console.error("[v0] Error loading mentions:", error)
+      console.error("[v0] Error loading region mentions:", error)
     } finally {
       setLoadingMentions(false)
     }
@@ -340,13 +353,17 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
                         </p>
                         <p className="text-[#A78BFA] text-xs mt-1">#{mention.mention_text}</p>
                         <p className="text-[#9F8475] text-xs mt-1">
-                          {new Date(mention.created_at).toLocaleDateString("pt-BR")}
+                          {new Date(mention.created_at).toLocaleDateString("pt-BR", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          })}
                         </p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[#9F8475] text-sm">Nenhuma citação encontrada</p>
+                  <p className="text-[#9F8475] text-sm">Nenhuma citação encontrada.</p>
                 )}
               </div>
             </>

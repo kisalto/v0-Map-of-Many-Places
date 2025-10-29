@@ -62,22 +62,34 @@ export function CharacterCrudDialog({
     setLoadingMentions(true)
     try {
       const supabase = createClient()
-      const { data: mentionsData } = await supabase
+
+      console.log("[v0] Loading mentions for character:", characterId)
+
+      const { data: mentionsData, error } = await supabase
         .from("character_mentions")
         .select("id, task_id, mention_text, created_at")
         .eq("character_id", characterId)
         .order("created_at", { ascending: false })
 
+      console.log("[v0] Mentions data:", mentionsData, "Error:", error)
+
       if (mentionsData && mentionsData.length > 0) {
-        const taskIds = mentionsData.map((m) => m.task_id)
-        const { data: tasksData } = await supabase.from("tasks").select("id, title").in("id", taskIds)
+        const taskIds = mentionsData.map((m) => m.task_id).filter(Boolean)
 
-        const mentionsWithTasks = mentionsData.map((mention) => ({
-          ...mention,
-          task: tasksData?.find((t) => t.id === mention.task_id),
-        }))
+        if (taskIds.length > 0) {
+          const { data: tasksData } = await supabase.from("tasks").select("id, title, created_at").in("id", taskIds)
 
-        setMentions(mentionsWithTasks)
+          console.log("[v0] Tasks data:", tasksData)
+
+          const mentionsWithTasks = mentionsData.map((mention) => ({
+            ...mention,
+            task: tasksData?.find((t) => t.id === mention.task_id),
+          }))
+
+          setMentions(mentionsWithTasks)
+        } else {
+          setMentions([])
+        }
       } else {
         setMentions([])
       }
@@ -193,11 +205,11 @@ export function CharacterCrudDialog({
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Link2 className="h-4 w-4 text-[#60A5FA]" />
-                  <Label className="text-[#E7D1B1]">Citações</Label>
+                  <Label className="text-[#E7D1B1]">Aparições</Label>
                 </div>
 
                 {loadingMentions ? (
-                  <p className="text-[#9F8475] text-sm">Carregando citações...</p>
+                  <p className="text-[#9F8475] text-sm">Carregando aparições...</p>
                 ) : mentions.length > 0 ? (
                   <div className="space-y-2">
                     {mentions.map((mention) => (
@@ -210,13 +222,17 @@ export function CharacterCrudDialog({
                         </p>
                         <p className="text-[#60A5FA] text-xs mt-1">@{mention.mention_text}</p>
                         <p className="text-[#9F8475] text-xs mt-1">
-                          {new Date(mention.created_at).toLocaleDateString("pt-BR")}
+                          {new Date(mention.created_at).toLocaleDateString("pt-BR", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          })}
                         </p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[#9F8475] text-sm">Nenhuma citação encontrada</p>
+                  <p className="text-[#9F8475] text-sm">Nenhuma aparição registrada.</p>
                 )}
               </div>
             </>

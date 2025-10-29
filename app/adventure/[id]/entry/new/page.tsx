@@ -71,25 +71,63 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
 
       const characterMentions = extractMentions(content, "character")
       if (characterMentions.length > 0) {
-        console.log("[v0] Saving character mentions:", characterMentions)
-        await supabase.from("character_mentions").insert(
-          characterMentions.map((name) => ({
+        console.log("[v0] Character mentions found:", characterMentions)
+
+        // Buscar os IDs dos personagens pelo nome
+        const { data: charactersData } = await supabase
+          .from("characters")
+          .select("id, name")
+          .eq("adventure_id", adventureId)
+          .in("name", characterMentions)
+
+        console.log("[v0] Characters found in DB:", charactersData)
+
+        if (charactersData && charactersData.length > 0) {
+          const mentionsToInsert = charactersData.map((char) => ({
+            character_id: char.id,
             task_id: entry.id,
-            mention_text: name,
+            mention_text: char.name,
             character_type: "npc",
-          })),
-        )
+          }))
+
+          console.log("[v0] Inserting character mentions:", mentionsToInsert)
+
+          const { error: mentionError } = await supabase.from("character_mentions").insert(mentionsToInsert)
+
+          if (mentionError) {
+            console.error("[v0] Error saving character mentions:", mentionError)
+          }
+        }
       }
 
       const regionMentions = extractMentions(content, "region")
       if (regionMentions.length > 0) {
-        console.log("[v0] Saving region mentions:", regionMentions)
-        await supabase.from("region_mentions").insert(
-          regionMentions.map((name) => ({
+        console.log("[v0] Region mentions found:", regionMentions)
+
+        // Buscar os IDs das regiões pelo nome
+        const { data: regionsData } = await supabase
+          .from("regions")
+          .select("id, name")
+          .eq("adventure_id", adventureId)
+          .in("name", regionMentions)
+
+        console.log("[v0] Regions found in DB:", regionsData)
+
+        if (regionsData && regionsData.length > 0) {
+          const mentionsToInsert = regionsData.map((region) => ({
+            region_id: region.id,
             task_id: entry.id,
-            mention_text: name,
-          })),
-        )
+            mention_text: region.name,
+          }))
+
+          console.log("[v0] Inserting region mentions:", mentionsToInsert)
+
+          const { error: mentionError } = await supabase.from("region_mentions").insert(mentionsToInsert)
+
+          if (mentionError) {
+            console.error("[v0] Error saving region mentions:", mentionError)
+          }
+        }
       }
 
       setShowSaveConfirm(false)
@@ -104,7 +142,7 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
 
   const extractMentions = (text: string, type: "character" | "region"): string[] => {
     const prefix = type === "character" ? "@" : "#"
-    const regex = new RegExp(`${prefix}([\\w\\s]+)(?=\\s|$|[.,!?])`, "g")
+    const regex = new RegExp(`${prefix}([\\w\\s()]+)(?=\\s|$|[.,!?])`, "g")
     const matches = text.match(regex)
     return matches ? [...new Set(matches.map((m) => m.slice(1).trim()))] : []
   }

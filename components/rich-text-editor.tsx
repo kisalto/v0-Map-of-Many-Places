@@ -333,6 +333,7 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
           onChange={handleInput}
           onKeyDown={handleKeyDown}
           disabled={disabled}
+          spellCheck={false}
           style={{
             background: `linear-gradient(transparent, transparent)`,
           }}

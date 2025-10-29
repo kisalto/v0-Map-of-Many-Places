@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
-import { Upload, Plus, X } from "lucide-react"
+import { ImageUpload } from "@/components/image-upload"
+import { X } from "lucide-react"
 
 interface Region {
   id: string
@@ -103,7 +104,8 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
       let regionId: string
 
       if (region) {
-        await supabase.from("regions").update(data).eq("id", region.id)
+        const { error } = await supabase.from("regions").update(data).eq("id", region.id)
+        if (error) throw error
         regionId = region.id
 
         // Delete existing subregions that were removed
@@ -114,7 +116,9 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
           .eq("region_id", regionId)
           .not("id", "in", `(${existingIds.join(",")})`)
       } else {
-        const { data: newRegion } = await supabase.from("regions").insert(data).select().single()
+        const { data: newRegion, error } = await supabase.from("regions").insert(data).select().single()
+        if (error) throw error
+        console.log("[v0] Region created:", newRegion)
         regionId = newRegion!.id
       }
 
@@ -156,30 +160,8 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
         <div className="space-y-6 py-4">
           {/* Image URL */}
           <div className="space-y-2">
-            <Label htmlFor="image-url" className="text-[#E7D1B1]">
-              URL da Imagem
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                id="image-url"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://exemplo.com/imagem.jpg"
-                className="bg-[#0B0A13] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475]"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                className="border-[#EE9B3A]/30 text-[#EE9B3A] hover:bg-[#EE9B3A]/10 bg-transparent"
-              >
-                <Upload className="h-4 w-4" />
-              </Button>
-            </div>
-            {imageUrl && (
-              <div className="relative w-full h-48 rounded-lg overflow-hidden bg-[#0B0A13]">
-                <img src={imageUrl || "/placeholder.svg"} alt="Preview" className="w-full h-full object-cover" />
-              </div>
-            )}
+            <Label className="text-[#E7D1B1]">Imagem da Região</Label>
+            <ImageUpload value={imageUrl} onChange={setImageUrl} onRemove={() => setImageUrl("")} />
           </div>
 
           {/* Name */}
@@ -220,7 +202,7 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
               value={history}
               onChange={(e) => setHistory(e.target.value)}
               placeholder="Conte a história desta região..."
-              rows={4}
+              rows={6}
               className="bg-[#0B0A13] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475] resize-none"
             />
           </div>
@@ -275,7 +257,6 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
                 size="sm"
                 className="w-full border-[#EE9B3A]/30 text-[#EE9B3A] hover:bg-[#EE9B3A]/10 bg-transparent"
               >
-                <Plus className="h-4 w-4 mr-2" />
                 Adicionar Região Interna
               </Button>
             </div>

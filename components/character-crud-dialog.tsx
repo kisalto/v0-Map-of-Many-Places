@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
-import { Upload } from "lucide-react"
+import { ImageUpload } from "@/components/image-upload"
 
 interface Character {
   id: string
@@ -71,9 +71,11 @@ export function CharacterCrudDialog({
       }
 
       if (character) {
-        await supabase.from("characters").update(data).eq("id", character.id)
+        const { error } = await supabase.from("characters").update(data).eq("id", character.id)
+        if (error) throw error
       } else {
-        await supabase.from("characters").insert(data)
+        const { error } = await supabase.from("characters").insert(data)
+        if (error) throw error
       }
 
       onSuccess()
@@ -101,30 +103,8 @@ export function CharacterCrudDialog({
         <div className="space-y-6 py-4">
           {/* Image URL */}
           <div className="space-y-2">
-            <Label htmlFor="image-url" className="text-[#E7D1B1]">
-              URL da Imagem
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                id="image-url"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://exemplo.com/imagem.jpg"
-                className="bg-[#0B0A13] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475]"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                className="border-[#EE9B3A]/30 text-[#EE9B3A] hover:bg-[#EE9B3A]/10 bg-transparent"
-              >
-                <Upload className="h-4 w-4" />
-              </Button>
-            </div>
-            {imageUrl && (
-              <div className="relative w-full h-48 rounded-lg overflow-hidden bg-[#0B0A13]">
-                <img src={imageUrl || "/placeholder.svg"} alt="Preview" className="w-full h-full object-cover" />
-              </div>
-            )}
+            <Label className="text-[#E7D1B1]">Imagem do Personagem</Label>
+            <ImageUpload value={imageUrl} onChange={setImageUrl} onRemove={() => setImageUrl("")} />
           </div>
 
           {/* Name */}

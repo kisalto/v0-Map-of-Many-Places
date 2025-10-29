@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { RegionCrudDialog } from "@/components/region-crud-dialog"
 
-interface PointOfInterest {
+interface Subregion {
   id: string
   name: string
   description: string | null
@@ -19,11 +19,9 @@ interface PointOfInterest {
 interface Region {
   id: string
   name: string
-  description: string | null
+  short_description: string | null
   history: string | null
   image_url: string | null
-  parent_region_id: string | null
-  points_of_interest: PointOfInterest[]
 }
 
 interface Adventure {
@@ -41,7 +39,9 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [editingRegion, setEditingRegion] = useState<Region | null>(null)
   const [mentions, setMentions] = useState<any[]>([])
+  const [subregions, setSubregions] = useState<Subregion[]>([])
   const router = useRouter()
 
   const isActive = adventure.is_active !== false
@@ -49,15 +49,31 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
   // Filter regions based on search
   const filteredRegions = regions.filter((region) => region.name.toLowerCase().includes(searchQuery.toLowerCase()))
 
-  // Load mentions when region is selected
+  // Load mentions and subregions when region is selected
   const handleSelectRegion = async (region: Region) => {
     setSelectedRegion(region)
 
-    // Load mentions from database
     const supabase = createClient()
-    const { data } = await supabase.from("region_mentions").select("*, tasks(*)").eq("region_name", region.name)
 
-    setMentions(data || [])
+    // Load mentions
+    const { data: mentionsData } = await supabase
+      .from("region_mentions")
+      .select("*, tasks(*)")
+      .eq("region_name", region.name)
+    setMentions(mentionsData || [])
+
+    // Load subregions
+    const { data: subregionsData } = await supabase
+      .from("subregions")
+      .select("*")
+      .eq("region_id", region.id)
+      .order("created_at")
+    setSubregions(subregionsData || [])
+  }
+
+  const handleEdit = (region: Region) => {
+    setEditingRegion(region)
+    setSelectedRegion(null)
   }
 
   return (
@@ -118,13 +134,6 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
                   <h3 className="text-[#EE9B3A] font-serif text-3xl">{region.name}</h3>
                 </div>
               </div>
-
-              {/* Sub-regions if any */}
-              {region.parent_region_id && (
-                <div className="p-4 border-t border-[#EE9B3A]/20">
-                  <p className="text-[#9F8475] text-sm">Sub-região</p>
-                </div>
-              )}
             </CardContent>
           </Card>
         ))}
@@ -142,6 +151,7 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
                     size="sm"
                     variant="ghost"
                     disabled={!isActive}
+                    onClick={() => handleEdit(selectedRegion)}
                     className="text-[#EE9B3A] hover:bg-[#EE9B3A]/10"
                   >
                     <Edit2 className="h-4 w-4" />
@@ -163,18 +173,19 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
               <div>
                 <h4 className="text-[#EE9B3A] font-serif mb-2">Historia</h4>
                 <p className="text-[#E7D1B1] leading-relaxed text-sm">
-                  {selectedRegion.history || selectedRegion.description || "Nenhuma história disponível."}
+                  {selectedRegion.history || selectedRegion.short_description || "Nenhuma história disponível."}
                 </p>
               </div>
 
-              {/* Pontos de Interesse */}
+              {/* Pontos de Interesse (Subregions) */}
               <div>
                 <h4 className="text-[#EE9B3A] font-serif mb-2">Pontos de Interesse</h4>
-                {selectedRegion.points_of_interest && selectedRegion.points_of_interest.length > 0 ? (
+                {subregions.length > 0 ? (
                   <div className="space-y-2">
-                    {selectedRegion.points_of_interest.map((poi) => (
-                      <div key={poi.id} className="text-[#E7D1B1] text-sm">
-                        {poi.name}
+                    {subregions.map((sub) => (
+                      <div key={sub.id} className="text-[#E7D1B1] text-sm">
+                        <p className="font-medium">{sub.name}</p>
+                        {sub.description && <p className="text-[#9F8475] text-xs">{sub.description}</p>}
                       </div>
                     ))}
                   </div>
@@ -214,6 +225,18 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
         adventureId={adventure.id}
         onSuccess={() => {
           setShowCreateDialog(false)
+          router.refresh()
+        }}
+      />
+
+      {/* Modal de edição de região */}
+      <RegionCrudDialog
+        open={!!editingRegion}
+        onOpenChange={(open) => !open && setEditingRegion(null)}
+        adventureId={adventure.id}
+        region={editingRegion}
+        onSuccess={() => {
+          setEditingRegion(null)
           router.refresh()
         }}
       />

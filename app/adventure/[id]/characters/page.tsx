@@ -20,14 +20,8 @@ export default async function CharactersPage({ params }: { params: Promise<{ id:
     redirect("/dashboard")
   }
 
-  const { data: npcs } = await supabase
-    .from("npcs")
-    .select("*")
-    .eq("adventure_id", id)
-    .order("created_at", { ascending: false })
-
-  const { data: players } = await supabase
-    .from("adventure_players")
+  const { data: characters } = await supabase
+    .from("characters")
     .select("*")
     .eq("adventure_id", id)
     .order("created_at", { ascending: false })
@@ -35,7 +29,7 @@ export default async function CharactersPage({ params }: { params: Promise<{ id:
   return (
     <div className="min-h-screen bg-[#0B0A13]">
       <AdventureHeader adventure={adventure} profile={profile} />
-      <CharactersView adventure={adventure} npcs={npcs || []} players={players || []} />
+      <CharactersView adventure={adventure} characters={characters || []} />
     </div>
   )
 }

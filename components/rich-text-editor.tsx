@@ -382,7 +382,8 @@ function renderColoredText(text: string) {
   const parts: React.ReactNode[] = []
   let lastIndex = 0
 
-  const mentionRegex = /(@[\w()]+)|(#[\w()]+)/g
+  // Captures everything after @ or # until it finds: double space, punctuation, another mention, or end of line
+  const mentionRegex = /(@[^@#\n]+?)(?=\s{2,}|[.!?,;:]|\s[@#]|$)|(#[^@#\n]+?)(?=\s{2,}|[.!?,;:]|\s[@#]|$)/g
   let match
 
   while ((match = mentionRegex.exec(text)) !== null) {
@@ -396,7 +397,7 @@ function renderColoredText(text: string) {
     }
 
     // Add colored mention
-    const mention = match[0]
+    const mention = match[0].trim()
     const isCharacter = mention.startsWith("@")
     parts.push(
       <span key={`mention-${match.index}`} className={isCharacter ? "text-[#60A5FA]" : "text-[#A78BFA]"}>
@@ -404,7 +405,7 @@ function renderColoredText(text: string) {
       </span>,
     )
 
-    lastIndex = match.index + mention.length
+    lastIndex = match.index + match[0].length
   }
 
   // Add remaining text

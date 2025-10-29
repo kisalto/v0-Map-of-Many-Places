@@ -63,7 +63,7 @@ export function CharacterCrudDialog({
     try {
       const supabase = createClient()
 
-      console.log("[v0] Loading mentions for character:", characterId)
+      console.log("[v0] Loading mentions for character ID:", characterId)
 
       const { data: mentionsData, error } = await supabase
         .from("character_mentions")
@@ -71,30 +71,45 @@ export function CharacterCrudDialog({
         .eq("character_id", characterId)
         .order("created_at", { ascending: false })
 
-      console.log("[v0] Mentions data:", mentionsData, "Error:", error)
+      console.log("[v0] Character mentions query result:", { mentionsData, error })
+
+      if (error) {
+        console.error("[v0] Error loading mentions:", error)
+        setMentions([])
+        return
+      }
 
       if (mentionsData && mentionsData.length > 0) {
         const taskIds = mentionsData.map((m) => m.task_id).filter(Boolean)
 
-        if (taskIds.length > 0) {
-          const { data: tasksData } = await supabase.from("tasks").select("id, title, created_at").in("id", taskIds)
+        console.log("[v0] Task IDs from mentions:", taskIds)
 
-          console.log("[v0] Tasks data:", tasksData)
+        if (taskIds.length > 0) {
+          const { data: tasksData, error: tasksError } = await supabase
+            .from("tasks")
+            .select("id, title, created_at")
+            .in("id", taskIds)
+
+          console.log("[v0] Tasks query result:", { tasksData, tasksError })
 
           const mentionsWithTasks = mentionsData.map((mention) => ({
             ...mention,
             task: tasksData?.find((t) => t.id === mention.task_id),
           }))
 
+          console.log("[v0] Final mentions with tasks:", mentionsWithTasks)
+
           setMentions(mentionsWithTasks)
         } else {
           setMentions([])
         }
       } else {
+        console.log("[v0] No mentions found for this character")
         setMentions([])
       }
     } catch (error) {
       console.error("[v0] Error loading mentions:", error)
+      setMentions([])
     } finally {
       setLoadingMentions(false)
     }

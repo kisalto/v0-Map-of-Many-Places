@@ -53,7 +53,7 @@ export function AdventureGrid({ adventures }: AdventureGridProps) {
                 {isActive ? (
                   <Badge className="bg-[#84E557]/20 text-[#84E557] border-[#84E557]/30 font-serif">Ativo</Badge>
                 ) : (
-                  <Badge className="bg-[#9F8475]/20 text-[#9F8475] border-[#9F8475]/30 font-serif">Desativado</Badge>
+                  <Badge className="bg-red-500/20 text-red-400 border-red-500/30 font-serif">Desativado</Badge>
                 )}
               </div>
             </CardHeader>

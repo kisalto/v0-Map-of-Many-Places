@@ -35,6 +35,17 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
     const supabase = createClient()
 
     try {
+      console.log("[v0] Saving entry with data:", { adventureId, chapterId, title, content })
+
+      const { data: existingTasks } = await supabase
+        .from("tasks")
+        .select("order_index")
+        .eq("chapter_id", chapterId)
+        .order("order_index", { ascending: false })
+        .limit(1)
+
+      const nextOrderIndex = existingTasks && existingTasks.length > 0 ? existingTasks[0].order_index + 1 : 0
+
       // Create the entry
       const { data: entry, error } = await supabase
         .from("tasks")
@@ -44,32 +55,42 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
           title: title.trim(),
           content: content,
           status: "pending",
+          order_index: nextOrderIndex,
         })
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error("[v0] Error creating entry:", error)
+        throw error
+      }
+
+      console.log("[v0] Entry created successfully:", entry)
 
       // Extract and save character mentions
       const characterMentions = extractMentions(content, "character")
       if (characterMentions.length > 0) {
-        await supabase.from("character_mentions").insert(
+        console.log("[v0] Saving character mentions:", characterMentions)
+        const { error: mentionsError } = await supabase.from("character_mentions").insert(
           characterMentions.map((name) => ({
             task_id: entry.id,
             character_name: name,
           })),
         )
+        if (mentionsError) console.error("[v0] Error saving character mentions:", mentionsError)
       }
 
       // Extract and save region mentions
       const regionMentions = extractMentions(content, "region")
       if (regionMentions.length > 0) {
-        await supabase.from("region_mentions").insert(
+        console.log("[v0] Saving region mentions:", regionMentions)
+        const { error: mentionsError } = await supabase.from("region_mentions").insert(
           regionMentions.map((name) => ({
             task_id: entry.id,
             region_name: name,
           })),
         )
+        if (mentionsError) console.error("[v0] Error saving region mentions:", mentionsError)
       }
 
       router.push(`/adventure/${adventureId}`)

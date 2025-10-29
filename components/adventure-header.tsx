@@ -90,6 +90,7 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
       alert("Campanha desativada com sucesso!")
       setShowSettings(false)
       router.push("/dashboard")
+      router.refresh()
     } catch (error) {
       console.error("Erro ao desativar:", error)
       alert("Erro ao desativar campanha")

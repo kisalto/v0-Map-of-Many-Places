@@ -85,6 +85,14 @@ ALTER TABLE public.subregions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.character_mentions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.region_mentions ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies before creating new ones to avoid "already exists" errors
+
+-- Drop existing policies for chapters
+DROP POLICY IF EXISTS "chapters_select_own" ON public.chapters;
+DROP POLICY IF EXISTS "chapters_insert_own" ON public.chapters;
+DROP POLICY IF EXISTS "chapters_update_own" ON public.chapters;
+DROP POLICY IF EXISTS "chapters_delete_own" ON public.chapters;
+
 -- RLS Policies for chapters
 CREATE POLICY "chapters_select_own" ON public.chapters FOR SELECT 
   USING (EXISTS (SELECT 1 FROM public.adventures WHERE adventures.id = chapters.adventure_id AND adventures.creator_id = auth.uid()));
@@ -94,6 +102,12 @@ CREATE POLICY "chapters_update_own" ON public.chapters FOR UPDATE
   USING (EXISTS (SELECT 1 FROM public.adventures WHERE adventures.id = chapters.adventure_id AND adventures.creator_id = auth.uid()));
 CREATE POLICY "chapters_delete_own" ON public.chapters FOR DELETE 
   USING (EXISTS (SELECT 1 FROM public.adventures WHERE adventures.id = chapters.adventure_id AND adventures.creator_id = auth.uid()));
+
+-- Drop existing policies for tasks
+DROP POLICY IF EXISTS "tasks_select_own" ON public.tasks;
+DROP POLICY IF EXISTS "tasks_insert_own" ON public.tasks;
+DROP POLICY IF EXISTS "tasks_update_own" ON public.tasks;
+DROP POLICY IF EXISTS "tasks_delete_own" ON public.tasks;
 
 -- RLS Policies for tasks
 CREATE POLICY "tasks_select_own" ON public.tasks FOR SELECT 
@@ -105,6 +119,12 @@ CREATE POLICY "tasks_update_own" ON public.tasks FOR UPDATE
 CREATE POLICY "tasks_delete_own" ON public.tasks FOR DELETE 
   USING (EXISTS (SELECT 1 FROM public.adventures WHERE adventures.id = tasks.adventure_id AND adventures.creator_id = auth.uid()));
 
+-- Drop existing policies for characters
+DROP POLICY IF EXISTS "characters_select_own" ON public.characters;
+DROP POLICY IF EXISTS "characters_insert_own" ON public.characters;
+DROP POLICY IF EXISTS "characters_update_own" ON public.characters;
+DROP POLICY IF EXISTS "characters_delete_own" ON public.characters;
+
 -- RLS Policies for characters
 CREATE POLICY "characters_select_own" ON public.characters FOR SELECT 
   USING (EXISTS (SELECT 1 FROM public.adventures WHERE adventures.id = characters.adventure_id AND adventures.creator_id = auth.uid()));
@@ -115,6 +135,12 @@ CREATE POLICY "characters_update_own" ON public.characters FOR UPDATE
 CREATE POLICY "characters_delete_own" ON public.characters FOR DELETE 
   USING (EXISTS (SELECT 1 FROM public.adventures WHERE adventures.id = characters.adventure_id AND adventures.creator_id = auth.uid()));
 
+-- Drop existing policies for regions
+DROP POLICY IF EXISTS "regions_select_own" ON public.regions;
+DROP POLICY IF EXISTS "regions_insert_own" ON public.regions;
+DROP POLICY IF EXISTS "regions_update_own" ON public.regions;
+DROP POLICY IF EXISTS "regions_delete_own" ON public.regions;
+
 -- RLS Policies for regions
 CREATE POLICY "regions_select_own" ON public.regions FOR SELECT 
   USING (EXISTS (SELECT 1 FROM public.adventures WHERE adventures.id = regions.adventure_id AND adventures.creator_id = auth.uid()));
@@ -124,6 +150,12 @@ CREATE POLICY "regions_update_own" ON public.regions FOR UPDATE
   USING (EXISTS (SELECT 1 FROM public.adventures WHERE adventures.id = regions.adventure_id AND adventures.creator_id = auth.uid()));
 CREATE POLICY "regions_delete_own" ON public.regions FOR DELETE 
   USING (EXISTS (SELECT 1 FROM public.adventures WHERE adventures.id = regions.adventure_id AND adventures.creator_id = auth.uid()));
+
+-- Drop existing policies for subregions
+DROP POLICY IF EXISTS "subregions_select_own" ON public.subregions;
+DROP POLICY IF EXISTS "subregions_insert_own" ON public.subregions;
+DROP POLICY IF EXISTS "subregions_update_own" ON public.subregions;
+DROP POLICY IF EXISTS "subregions_delete_own" ON public.subregions;
 
 -- RLS Policies for subregions
 CREATE POLICY "subregions_select_own" ON public.subregions FOR SELECT 
@@ -151,6 +183,11 @@ CREATE POLICY "subregions_delete_own" ON public.subregions FOR DELETE
     WHERE regions.id = subregions.region_id AND adventures.creator_id = auth.uid()
   ));
 
+-- Drop existing policies for character_mentions
+DROP POLICY IF EXISTS "character_mentions_select_own" ON public.character_mentions;
+DROP POLICY IF EXISTS "character_mentions_insert_own" ON public.character_mentions;
+DROP POLICY IF EXISTS "character_mentions_delete_own" ON public.character_mentions;
+
 -- RLS Policies for character_mentions
 CREATE POLICY "character_mentions_select_own" ON public.character_mentions FOR SELECT 
   USING (EXISTS (
@@ -170,6 +207,11 @@ CREATE POLICY "character_mentions_delete_own" ON public.character_mentions FOR D
     JOIN public.adventures ON adventures.id = tasks.adventure_id 
     WHERE tasks.id = character_mentions.task_id AND adventures.creator_id = auth.uid()
   ));
+
+-- Drop existing policies for region_mentions
+DROP POLICY IF EXISTS "region_mentions_select_own" ON public.region_mentions;
+DROP POLICY IF EXISTS "region_mentions_insert_own" ON public.region_mentions;
+DROP POLICY IF EXISTS "region_mentions_delete_own" ON public.region_mentions;
 
 -- RLS Policies for region_mentions
 CREATE POLICY "region_mentions_select_own" ON public.region_mentions FOR SELECT 

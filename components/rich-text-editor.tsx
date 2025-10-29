@@ -22,7 +22,7 @@ import {
 interface Character {
   id: string
   name: string
-  type: "npc" | "player"
+  type: "character"
 }
 
 interface Region {
@@ -51,27 +51,21 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
     const loadData = async () => {
       const supabase = createClient()
 
-      const { data: npcs } = await supabase.from("npcs").select("id, name").eq("adventure_id", adventureId)
-
-      const { data: players } = await supabase
-        .from("adventure_players")
-        .select("id, character_name")
+      const { data: charactersData } = await supabase
+        .from("characters")
+        .select("id, name")
         .eq("adventure_id", adventureId)
 
       const { data: regionsData } = await supabase.from("regions").select("id, name").eq("adventure_id", adventureId)
 
-      const allCharacters: Character[] = [
-        ...(npcs || []).map((npc) => ({
-          id: npc.id,
-          name: npc.name,
-          type: "npc" as const,
-        })),
-        ...(players || []).map((player) => ({
-          id: player.id,
-          name: player.character_name,
-          type: "player" as const,
-        })),
-      ]
+      console.log("[v0] Loaded characters for mentions:", charactersData)
+      console.log("[v0] Loaded regions for mentions:", regionsData)
+
+      const allCharacters: Character[] = (charactersData || []).map((char) => ({
+        id: char.id,
+        name: char.name,
+        type: "character" as const,
+      }))
 
       setCharacters(allCharacters)
       setRegions(regionsData || [])
@@ -96,7 +90,7 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
         const textAfterMention = textBeforeCursor.slice(lastMention + 1)
         const hasSpace = textAfterMention.includes(" ")
 
-        if (!hasSpace && textAfterMention.length > 0) {
+        if (!hasSpace) {
           const type = lastAt > lastHash ? "character" : "region"
           setMentionStart(lastMention)
           setMentionType(type)
@@ -106,6 +100,8 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
             type === "character"
               ? characters.filter((c) => c.name.toLowerCase().includes(query))
               : regions.filter((r) => r.name.toLowerCase().includes(query))
+
+          console.log("[v0] Mention detected:", { type, query, filtered })
 
           setSuggestions(filtered)
           setShowSuggestions(filtered.length > 0)
@@ -153,6 +149,8 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
     const beforeMention = text.slice(0, mentionStart)
     const afterMention = text.slice(mentionStart + 1).replace(/^[^\s]*/, "")
     const newText = `${beforeMention}${prefix}${item.name} ${afterMention}`
+
+    console.log("[v0] Inserting mention:", { item, newText })
 
     onChange(newText)
     setShowSuggestions(false)
@@ -355,9 +353,7 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
                       {item.name.charAt(0).toUpperCase()}
                     </div>
                     <span className="text-sm text-[#E7D1B1]">{item.name}</span>
-                    {"type" in item && (
-                      <span className="ml-auto text-xs text-[#9F8475]">{item.type === "npc" ? "NPC" : "Jogador"}</span>
-                    )}
+                    {"type" in item && <span className="ml-auto text-xs text-[#9F8475]">Personagem</span>}
                   </div>
                 ))}
               </div>

@@ -103,6 +103,7 @@ export function CharacterCrudDialog({
 
           setMentions(mentionsWithTasks)
         } else {
+          console.log("[v0] No task IDs found in mentions")
           setMentions([])
         }
       } else {

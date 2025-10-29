@@ -159,11 +159,11 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
 
   const extractMentions = (text: string, type: "character" | "region"): string[] => {
     const prefix = type === "character" ? "@" : "#"
-    const regex = new RegExp(`${prefix === "@" ? "@" : "#"}[^@#\\n]+?(?=\\s{2,}|[.!?,;:]|\\s[@#]|$)`, "g")
+    const regex = new RegExp(`${prefix === "@" ? "@" : "#"}[^@#\\n.!?,;:]+`, "g")
     const matches = text.match(regex)
     const extracted = matches ? [...new Set(matches.map((m) => m.slice(1).trim()))] : []
 
-    console.log("[v0] Extracted mentions:", { type, text, matches, extracted })
+    console.log("[v0] Extracted mentions:", { type, prefix, text, matches, extracted })
 
     return extracted
   }

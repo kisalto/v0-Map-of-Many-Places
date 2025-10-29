@@ -4,6 +4,14 @@
 -- Este script dropa e recria todas as tabelas do zero
 -- Execute este script para ter um schema limpo e otimizado
 
+-- Dropar triggers antes de dropar funções
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
+-- Dropar funções com CASCADE para remover dependências automaticamente
+DROP FUNCTION IF EXISTS get_email_by_username(TEXT) CASCADE;
+DROP FUNCTION IF EXISTS handle_new_user() CASCADE;
+DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
+
 -- Dropar todas as tabelas existentes (CASCADE remove dependências)
 DROP TABLE IF EXISTS character_mentions CASCADE;
 DROP TABLE IF EXISTS region_mentions CASCADE;
@@ -15,10 +23,6 @@ DROP TABLE IF EXISTS tasks CASCADE;
 DROP TABLE IF EXISTS chapters CASCADE;
 DROP TABLE IF EXISTS adventures CASCADE;
 DROP TABLE IF EXISTS profiles CASCADE;
-
--- Dropar funções existentes
-DROP FUNCTION IF EXISTS get_email_by_username(TEXT);
-DROP FUNCTION IF EXISTS handle_new_user();
 
 -- =====================================================
 -- TABELA: profiles
@@ -84,10 +88,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Trigger para criar profile automaticamente quando usuário se registra
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+-- <MOVED> Trigger drop is now above function drops
 
 -- =====================================================
 -- TABELA: adventures
@@ -585,34 +586,36 @@ CREATE INDEX idx_region_mentions_task ON region_mentions(task_id);
 -- TRIGGERS PARA UPDATED_AT
 -- =====================================================
 
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- Function definition moved above
+-- CREATE OR REPLACE FUNCTION update_updated_at_column()
+-- RETURNS TRIGGER AS $$
+-- BEGIN
+--   NEW.updated_at = NOW();
+--   RETURN NEW;
+-- END;
+-- $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Trigger definitions moved above
+-- CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
+--   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_adventures_updated_at BEFORE UPDATE ON adventures
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- CREATE TRIGGER update_adventures_updated_at BEFORE UPDATE ON adventures
+--   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_chapters_updated_at BEFORE UPDATE ON chapters
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- CREATE TRIGGER update_chapters_updated_at BEFORE UPDATE ON chapters
+--   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON tasks
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON tasks
+--   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_characters_updated_at BEFORE UPDATE ON characters
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- CREATE TRIGGER update_characters_updated_at BEFORE UPDATE ON characters
+--   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_regions_updated_at BEFORE UPDATE ON regions
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- CREATE TRIGGER update_regions_updated_at BEFORE UPDATE ON regions
+--   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_sub_regions_updated_at BEFORE UPDATE ON sub_regions
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- CREATE TRIGGER update_sub_regions_updated_at BEFORE UPDATE ON sub_regions
+--   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_timeline_entries_updated_at BEFORE UPDATE ON timeline_entries
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- CREATE TRIGGER update_timeline_entries_updated_at BEFORE UPDATE ON timeline_entries
+--   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

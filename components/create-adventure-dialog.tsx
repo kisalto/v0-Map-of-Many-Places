@@ -83,6 +83,21 @@ export function CreateAdventureDialog({ children }: CreateAdventureDialogProps) 
 
       console.log("[v0] Adventure created successfully:", data)
 
+      console.log("[v0] Creating adventure_member for creator...")
+      const { error: memberError } = await supabase.from("adventure_members").insert({
+        adventure_id: data.id,
+        profile_id: user.id,
+        role: "dm", // Dungeon Master / Game Master
+      })
+
+      if (memberError) {
+        console.error("[v0] Error creating adventure_member:", memberError)
+        // Don't throw error here - adventure was created successfully
+        // Just log the error and continue
+      } else {
+        console.log("[v0] Adventure_member created successfully")
+      }
+
       // Reset form and close dialog
       setTitle("")
       setDescription("")

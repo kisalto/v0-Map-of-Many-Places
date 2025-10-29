@@ -2,9 +2,22 @@
 
 import type React from "react"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import {
+  Bold,
+  Italic,
+  Underline,
+  List,
+  ListOrdered,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+} from "lucide-react"
 
 interface Character {
   id: string
@@ -21,33 +34,30 @@ interface RichTextEditorProps {
   value: string
   onChange: (value: string) => void
   adventureId: string
+  disabled?: boolean
 }
 
-export function RichTextEditor({ value, onChange, adventureId }: RichTextEditorProps) {
+export function RichTextEditor({ value, onChange, adventureId, disabled = false }: RichTextEditorProps) {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [suggestions, setSuggestions] = useState<(Character | Region)[]>([])
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [mentionStart, setMentionStart] = useState(-1)
   const [mentionType, setMentionType] = useState<"character" | "region" | null>(null)
-  const editorRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [characters, setCharacters] = useState<Character[]>([])
   const [regions, setRegions] = useState<Region[]>([])
 
-  // Load characters and regions
   useEffect(() => {
     const loadData = async () => {
       const supabase = createClient()
 
-      // Load NPCs
       const { data: npcs } = await supabase.from("npcs").select("id, name").eq("adventure_id", adventureId)
 
-      // Load Players
       const { data: players } = await supabase
         .from("adventure_players")
         .select("id, character_name")
         .eq("adventure_id", adventureId)
 
-      // Load Regions
       const { data: regionsData } = await supabase.from("regions").select("id, name").eq("adventure_id", adventureId)
 
       const allCharacters: Character[] = [
@@ -70,54 +80,47 @@ export function RichTextEditor({ value, onChange, adventureId }: RichTextEditorP
     loadData()
   }, [adventureId])
 
-  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    const text = e.currentTarget.textContent || ""
+  const handleInput = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const newValue = e.target.value
+      onChange(newValue)
 
-    // Previne múltiplas chamadas do onChange
-    if (text === value) return
+      const cursorPos = e.target.selectionStart
+      const textBeforeCursor = newValue.slice(0, cursorPos)
 
-    onChange(text)
+      const lastAt = textBeforeCursor.lastIndexOf("@")
+      const lastHash = textBeforeCursor.lastIndexOf("#")
+      const lastMention = Math.max(lastAt, lastHash)
 
-    // Get cursor position
-    const selection = window.getSelection()
-    if (!selection || selection.rangeCount === 0) return
+      if (lastMention !== -1) {
+        const textAfterMention = textBeforeCursor.slice(lastMention + 1)
+        const hasSpace = textAfterMention.includes(" ")
 
-    const range = selection.getRangeAt(0)
-    const textBeforeCursor = range.startContainer.textContent?.slice(0, range.startOffset) || ""
+        if (!hasSpace && textAfterMention.length > 0) {
+          const type = lastAt > lastHash ? "character" : "region"
+          setMentionStart(lastMention)
+          setMentionType(type)
 
-    // Check for @ or # mention
-    const lastAt = textBeforeCursor.lastIndexOf("@")
-    const lastHash = textBeforeCursor.lastIndexOf("#")
-    const lastMention = Math.max(lastAt, lastHash)
+          const query = textAfterMention.toLowerCase()
+          const filtered =
+            type === "character"
+              ? characters.filter((c) => c.name.toLowerCase().includes(query))
+              : regions.filter((r) => r.name.toLowerCase().includes(query))
 
-    if (lastMention !== -1) {
-      const textAfterMention = textBeforeCursor.slice(lastMention + 1)
-      const hasSpace = textAfterMention.includes(" ")
-
-      if (!hasSpace) {
-        const type = lastAt > lastHash ? "character" : "region"
-        setMentionStart(lastMention)
-        setMentionType(type)
-
-        // Filter suggestions
-        const query = textAfterMention.toLowerCase()
-        const filtered =
-          type === "character"
-            ? characters.filter((c) => c.name.toLowerCase().includes(query))
-            : regions.filter((r) => r.name.toLowerCase().includes(query))
-
-        setSuggestions(filtered)
-        setShowSuggestions(filtered.length > 0)
-        setSelectedIndex(0)
+          setSuggestions(filtered)
+          setShowSuggestions(filtered.length > 0)
+          setSelectedIndex(0)
+        } else {
+          setShowSuggestions(false)
+        }
       } else {
         setShowSuggestions(false)
       }
-    } else {
-      setShowSuggestions(false)
-    }
-  }
+    },
+    [characters, regions, onChange],
+  )
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (!showSuggestions) return
 
     switch (e.key) {
@@ -131,8 +134,8 @@ export function RichTextEditor({ value, onChange, adventureId }: RichTextEditorP
         break
       case "Enter":
       case "Tab":
-        e.preventDefault()
         if (suggestions[selectedIndex]) {
+          e.preventDefault()
           insertMention(suggestions[selectedIndex])
         }
         break
@@ -143,9 +146,9 @@ export function RichTextEditor({ value, onChange, adventureId }: RichTextEditorP
   }
 
   const insertMention = (item: Character | Region) => {
-    if (!editorRef.current) return
+    if (!textareaRef.current) return
 
-    const text = editorRef.current.textContent || ""
+    const text = textareaRef.current.value
     const prefix = mentionType === "character" ? "@" : "#"
     const beforeMention = text.slice(0, mentionStart)
     const afterMention = text.slice(mentionStart + 1).replace(/^[^\s]*/, "")
@@ -154,65 +157,214 @@ export function RichTextEditor({ value, onChange, adventureId }: RichTextEditorP
     onChange(newText)
     setShowSuggestions(false)
 
-    // Update editor content with highlighted mention
     setTimeout(() => {
-      if (editorRef.current) {
-        editorRef.current.textContent = newText
-        // Set cursor after mention
-        const range = document.createRange()
-        const sel = window.getSelection()
-        const textNode = editorRef.current.firstChild
-        if (textNode) {
-          const cursorPos = mentionStart + item.name.length + 2
-          range.setStart(textNode, Math.min(cursorPos, textNode.textContent?.length || 0))
-          range.collapse(true)
-          sel?.removeAllRanges()
-          sel?.addRange(range)
-        }
+      if (textareaRef.current) {
+        const cursorPos = mentionStart + item.name.length + 2
+        textareaRef.current.setSelectionRange(cursorPos, cursorPos)
+        textareaRef.current.focus()
+      }
+    }, 0)
+  }
+
+  const applyFormat = (command: string) => {
+    if (!textareaRef.current || disabled) return
+
+    const start = textareaRef.current.selectionStart
+    const end = textareaRef.current.selectionEnd
+    const selectedText = value.substring(start, end)
+
+    if (!selectedText) return
+
+    let formattedText = selectedText
+    let wrapper = ""
+
+    switch (command) {
+      case "bold":
+        wrapper = "**"
+        formattedText = `**${selectedText}**`
+        break
+      case "italic":
+        wrapper = "*"
+        formattedText = `*${selectedText}*`
+        break
+      case "underline":
+        wrapper = "__"
+        formattedText = `__${selectedText}__`
+        break
+    }
+
+    const newValue = value.substring(0, start) + formattedText + value.substring(end)
+    onChange(newValue)
+
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus()
+        textareaRef.current.setSelectionRange(start + wrapper.length, end + wrapper.length)
+      }
+    }, 0)
+  }
+
+  const insertList = (ordered: boolean) => {
+    if (!textareaRef.current || disabled) return
+
+    const start = textareaRef.current.selectionStart
+    const prefix = ordered ? "1. " : "- "
+    const newValue = value.substring(0, start) + prefix + value.substring(start)
+
+    onChange(newValue)
+
+    setTimeout(() => {
+      if (textareaRef.current) {
+        const newPos = start + prefix.length
+        textareaRef.current.focus()
+        textareaRef.current.setSelectionRange(newPos, newPos)
       }
     }, 0)
   }
 
   return (
-    <div className="relative">
-      <div
-        ref={editorRef}
-        contentEditable
-        onInput={handleInput}
-        onKeyDown={handleKeyDown}
-        className="min-h-[500px] p-4 bg-[#0B0A13] border border-[#302831] rounded-lg text-[#E7D1B1] focus:outline-none focus:ring-2 focus:ring-[#EE9B3A]/50 leading-relaxed"
-        style={{ whiteSpace: "pre-wrap" }}
-        suppressContentEditableWarning
-      >
-        {value}
+    <div className="relative space-y-2">
+      <div className="flex items-center gap-1 p-2 bg-[#302831] border border-[#EE9B3A]/30 rounded-lg">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => applyFormat("bold")}
+          disabled={disabled}
+          className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
+          title="Negrito (Ctrl+B)"
+        >
+          <Bold className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => applyFormat("italic")}
+          disabled={disabled}
+          className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
+          title="Itálico (Ctrl+I)"
+        >
+          <Italic className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => applyFormat("underline")}
+          disabled={disabled}
+          className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
+          title="Sublinhado (Ctrl+U)"
+        >
+          <Underline className="h-4 w-4" />
+        </Button>
+
+        <Separator orientation="vertical" className="h-6 mx-1 bg-[#EE9B3A]/30" />
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => insertList(false)}
+          disabled={disabled}
+          className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
+          title="Lista com marcadores"
+        >
+          <List className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => insertList(true)}
+          disabled={disabled}
+          className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
+          title="Lista numerada"
+        >
+          <ListOrdered className="h-4 w-4" />
+        </Button>
+
+        <Separator orientation="vertical" className="h-6 mx-1 bg-[#EE9B3A]/30" />
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={disabled}
+          className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
+          title="Alinhar à esquerda"
+        >
+          <AlignLeft className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={disabled}
+          className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
+          title="Centralizar"
+        >
+          <AlignCenter className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={disabled}
+          className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
+          title="Alinhar à direita"
+        >
+          <AlignRight className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={disabled}
+          className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
+          title="Justificar"
+        >
+          <AlignJustify className="h-4 w-4" />
+        </Button>
       </div>
 
-      {/* Suggestions dropdown */}
-      {showSuggestions && suggestions.length > 0 && (
-        <Card className="absolute z-50 mt-1 w-64 bg-[#302831] border-[#EE9B3A]/30 shadow-lg">
-          <CardContent className="p-2">
-            <div className="space-y-1">
-              {suggestions.map((item, index) => (
-                <div
-                  key={item.id}
-                  className={`flex items-center gap-3 p-2 rounded cursor-pointer transition-colors ${
-                    index === selectedIndex ? "bg-[#EE9B3A]/20" : "hover:bg-[#EE9B3A]/10"
-                  }`}
-                  onClick={() => insertMention(item)}
-                >
-                  <div className="h-6 w-6 rounded-full bg-[#EE9B3A]/20 flex items-center justify-center text-[#EE9B3A] text-xs font-medium">
-                    {item.name.charAt(0).toUpperCase()}
+      <div className="relative">
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={handleInput}
+          onKeyDown={handleKeyDown}
+          disabled={disabled}
+          className="w-full min-h-[500px] p-4 bg-[#0B0A13] border border-[#302831] rounded-lg text-[#E7D1B1] focus:outline-none focus:ring-2 focus:ring-[#EE9B3A]/50 leading-relaxed resize-none font-sans disabled:opacity-50 disabled:cursor-not-allowed"
+          placeholder="Comece a escrever sua anotação... Use @ para mencionar personagens e # para mencionar regiões."
+        />
+
+        {showSuggestions && suggestions.length > 0 && (
+          <Card className="absolute z-50 mt-1 w-64 bg-[#302831] border-[#EE9B3A]/30 shadow-lg">
+            <CardContent className="p-2">
+              <div className="space-y-1">
+                {suggestions.map((item, index) => (
+                  <div
+                    key={item.id}
+                    className={`flex items-center gap-3 p-2 rounded cursor-pointer transition-colors ${
+                      index === selectedIndex ? "bg-[#EE9B3A]/20" : "hover:bg-[#EE9B3A]/10"
+                    }`}
+                    onClick={() => insertMention(item)}
+                  >
+                    <div className="h-6 w-6 rounded-full bg-[#EE9B3A]/20 flex items-center justify-center text-[#EE9B3A] text-xs font-medium">
+                      {item.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-sm text-[#E7D1B1]">{item.name}</span>
+                    {"type" in item && (
+                      <span className="ml-auto text-xs text-[#9F8475]">{item.type === "npc" ? "NPC" : "Jogador"}</span>
+                    )}
                   </div>
-                  <span className="text-sm text-[#E7D1B1]">{item.name}</span>
-                  {"type" in item && (
-                    <span className="ml-auto text-xs text-[#9F8475]">{item.type === "npc" ? "NPC" : "Jogador"}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { AdventureHeader } from "@/components/adventure-header"
+import { RegionsView } from "@/components/regions-view"
 
 export default async function RegionsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -19,15 +20,16 @@ export default async function RegionsPage({ params }: { params: Promise<{ id: st
     redirect("/dashboard")
   }
 
+  const { data: regions } = await supabase
+    .from("regions")
+    .select("*, points_of_interest(*)")
+    .eq("adventure_id", id)
+    .order("created_at", { ascending: false })
+
   return (
     <div className="min-h-screen bg-[#0B0A13]">
       <AdventureHeader adventure={adventure} profile={profile} />
-      <main className="container mx-auto px-6 py-8">
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-serif font-bold text-[#E7D1B1] mb-4">Página de Regiões</h2>
-          <p className="text-[#9F8475]">Em desenvolvimento...</p>
-        </div>
-      </main>
+      <RegionsView adventure={adventure} regions={regions || []} />
     </div>
   )
 }

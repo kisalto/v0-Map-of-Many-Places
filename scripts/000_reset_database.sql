@@ -126,6 +126,7 @@ CREATE TABLE chapters (
   title TEXT NOT NULL,
   description TEXT,
   order_index INTEGER DEFAULT 0,
+  is_completed BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

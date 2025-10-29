@@ -44,7 +44,9 @@ export default function SignUpPage() {
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      console.log("[v0] Signing up with:", { email, username, loginName })
+
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -56,15 +58,20 @@ export default function SignUpPage() {
         },
       })
 
+      console.log("[v0] Signup result:", { data, error })
+
       if (error) {
+        console.error("[v0] Signup error:", error)
         if (error.message.includes("unique") || error.message.includes("duplicate")) {
           throw new Error("Nome de login já está em uso")
         }
         throw error
       }
 
+      console.log("[v0] Signup successful, redirecting")
       router.push("/auth/signup-success")
     } catch (error: unknown) {
+      console.error("[v0] Signup catch error:", error)
       setError(error instanceof Error ? error.message : "Ocorreu um erro")
     } finally {
       setIsLoading(false)

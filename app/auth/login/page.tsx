@@ -24,32 +24,47 @@ export default function LoginPage() {
 
     try {
       const isEmail = identifier.includes("@")
+      console.log("[v0] Login attempt with:", { identifier, isEmail })
 
       if (isEmail) {
+        console.log("[v0] Logging in with email")
         const { error } = await supabase.auth.signInWithPassword({
           email: identifier,
           password,
         })
-        if (error) throw error
+        if (error) {
+          console.error("[v0] Email login error:", error)
+          throw error
+        }
       } else {
+        console.log("[v0] Looking up email by username:", identifier)
         const { data: emailData, error: emailError } = await supabase.rpc("get_email_by_username", {
           username_input: identifier,
         })
 
+        console.log("[v0] RPC result:", { emailData, emailError })
+
         if (emailError || !emailData) {
+          console.error("[v0] Username lookup failed:", emailError)
           throw new Error("Nome de usuário não encontrado")
         }
 
+        console.log("[v0] Found email, logging in:", emailData)
         const { error } = await supabase.auth.signInWithPassword({
           email: emailData,
           password,
         })
-        if (error) throw error
+        if (error) {
+          console.error("[v0] Password login error:", error)
+          throw error
+        }
       }
 
+      console.log("[v0] Login successful, redirecting to dashboard")
       router.push("/dashboard")
       router.refresh()
     } catch (error: unknown) {
+      console.error("[v0] Login error:", error)
       setError(error instanceof Error ? error.message : "Erro ao fazer login")
     } finally {
       setIsLoading(false)

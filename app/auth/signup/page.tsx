@@ -140,6 +140,33 @@ export default function SignUpPage() {
       }
 
       console.log("[v0] Signup successful for user:", data.user.id)
+
+      console.log("[v0] Creating profile manually...")
+      try {
+        const { error: profileError } = await supabase.from("profiles").insert({
+          id: data.user.id,
+          email: email,
+          username: loginName,
+          display_name: username,
+        })
+
+        if (profileError) {
+          console.error("[v0] Profile creation error:", profileError)
+          // Se o profile já existe (trigger funcionou), não é um erro crítico
+          if (!profileError.message.includes("duplicate") && !profileError.message.includes("unique")) {
+            throw new Error("Erro ao criar perfil de usuário")
+          } else {
+            console.log("[v0] Profile already exists (trigger worked), continuing...")
+          }
+        } else {
+          console.log("[v0] Profile created successfully")
+        }
+      } catch (profileError) {
+        console.error("[v0] Failed to create profile:", profileError)
+        // Não bloquear o signup se o profile não for criado
+        // O usuário pode tentar fazer login e o sistema tentará criar o profile novamente
+      }
+
       console.log("[v0] Redirecting to signup success page...")
       router.push("/auth/signup-success")
       console.log("[v0] ========== SIGNUP ATTEMPT END (SUCCESS) ==========")

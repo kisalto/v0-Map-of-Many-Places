@@ -59,6 +59,26 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
 
       const nextOrderIndex = existingTasks && existingTasks.length > 0 ? existingTasks[0].order_index + 1 : 0
 
+      const { data: timelineEntry, error: timelineError } = await supabase
+        .from("timeline_entries")
+        .insert({
+          adventure_id: adventureId,
+          chapter_id: chapterId,
+          title: title.trim(),
+          content: content,
+          is_task: true,
+          order_index: nextOrderIndex,
+        })
+        .select()
+        .single()
+
+      if (timelineError) {
+        console.error("[v0] Error creating timeline entry:", timelineError)
+        return
+      }
+
+      console.log("[v0] Timeline entry created successfully:", timelineEntry)
+
       const { data: entry, error } = await supabase
         .from("tasks")
         .insert({
@@ -80,7 +100,7 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
 
       console.log("[v0] Entry created successfully:", entry)
 
-      const timelineEntryId = entry.timeline_entry_id || null
+      const timelineEntryId = timelineEntry.id
 
       const characterMentions = extractMentions(content, "character")
       const regionMentions = extractMentions(content, "region")

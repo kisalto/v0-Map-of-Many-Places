@@ -48,18 +48,43 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
   const [regions, setRegions] = useState<Region[]>([])
 
   useEffect(() => {
+    console.log("[v0] RichTextEditor: Component mounted")
+    console.log("[v0] RichTextEditor: Adventure ID:", adventureId)
+    console.log("[v0] RichTextEditor: Initial value length:", value.length)
+
     const loadData = async () => {
+      console.log("[v0] RichTextEditor: Loading characters and regions...")
       const supabase = createClient()
 
-      const { data: charactersData } = await supabase
+      const { data: charactersData, error: charError } = await supabase
         .from("characters")
         .select("id, name")
         .eq("adventure_id", adventureId)
 
-      const { data: regionsData } = await supabase.from("regions").select("id, name").eq("adventure_id", adventureId)
+      if (charError) {
+        console.error("[v0] RichTextEditor: Error loading characters:", charError)
+      } else {
+        console.log("[v0] RichTextEditor: Characters loaded:", charactersData?.length || 0)
+        console.log(
+          "[v0] RichTextEditor: Character names:",
+          charactersData?.map((c) => c.name),
+        )
+      }
 
-      console.log("[v0] Loaded characters for mentions:", charactersData)
-      console.log("[v0] Loaded regions for mentions:", regionsData)
+      const { data: regionsData, error: regError } = await supabase
+        .from("regions")
+        .select("id, name")
+        .eq("adventure_id", adventureId)
+
+      if (regError) {
+        console.error("[v0] RichTextEditor: Error loading regions:", regError)
+      } else {
+        console.log("[v0] RichTextEditor: Regions loaded:", regionsData?.length || 0)
+        console.log(
+          "[v0] RichTextEditor: Region names:",
+          regionsData?.map((r) => r.name),
+        )
+      }
 
       const allCharacters: Character[] = (charactersData || []).map((char) => ({
         id: char.id,
@@ -69,47 +94,73 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
 
       setCharacters(allCharacters)
       setRegions(regionsData || [])
+
+      console.log("[v0] RichTextEditor: Data loaded successfully")
     }
 
     loadData()
-  }, [adventureId])
+  }, [adventureId, value.length])
 
   const handleInput = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const newValue = e.target.value
+      console.log("[v0] RichTextEditor: Input changed, new length:", newValue.length)
+
       onChange(newValue)
 
       const cursorPos = e.target.selectionStart
       const textBeforeCursor = newValue.slice(0, cursorPos)
 
+      console.log("[v0] RichTextEditor: Cursor position:", cursorPos)
+      console.log("[v0] RichTextEditor: Text before cursor:", textBeforeCursor.slice(-20))
+
       const lastAt = textBeforeCursor.lastIndexOf("@")
       const lastHash = textBeforeCursor.lastIndexOf("#")
       const lastMention = Math.max(lastAt, lastHash)
+
+      console.log("[v0] RichTextEditor: Last @ position:", lastAt)
+      console.log("[v0] RichTextEditor: Last # position:", lastHash)
+      console.log("[v0] RichTextEditor: Last mention position:", lastMention)
 
       if (lastMention !== -1) {
         const textAfterMention = textBeforeCursor.slice(lastMention + 1)
         const hasSpace = textAfterMention.includes(" ")
 
+        console.log("[v0] RichTextEditor: Text after mention:", textAfterMention)
+        console.log("[v0] RichTextEditor: Has space:", hasSpace)
+
         if (!hasSpace) {
           const type = lastAt > lastHash ? "character" : "region"
+          console.log("[v0] RichTextEditor: Mention type:", type)
+
           setMentionStart(lastMention)
           setMentionType(type)
 
           const query = textAfterMention.toLowerCase()
+          console.log("[v0] RichTextEditor: Search query:", query)
+
           const filtered =
             type === "character"
               ? characters.filter((c) => c.name.toLowerCase().includes(query))
               : regions.filter((r) => r.name.toLowerCase().includes(query))
 
-          console.log("[v0] Mention detected:", { type, query, filtered })
+          console.log("[v0] RichTextEditor: Filtered results:", filtered.length)
+          console.log(
+            "[v0] RichTextEditor: Filtered items:",
+            filtered.map((item) => item.name),
+          )
 
           setSuggestions(filtered)
           setShowSuggestions(filtered.length > 0)
           setSelectedIndex(0)
+
+          console.log("[v0] RichTextEditor: Show suggestions:", filtered.length > 0)
         } else {
+          console.log("[v0] RichTextEditor: Hiding suggestions (space found)")
           setShowSuggestions(false)
         }
       } else {
+        console.log("[v0] RichTextEditor: No mention trigger found")
         setShowSuggestions(false)
       }
     },
@@ -119,30 +170,50 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (!showSuggestions) return
 
+    console.log("[v0] RichTextEditor: Key pressed:", e.key)
+
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault()
-        setSelectedIndex((prev) => (prev + 1) % suggestions.length)
+        setSelectedIndex((prev) => {
+          const newIndex = (prev + 1) % suggestions.length
+          console.log("[v0] RichTextEditor: Selected index (down):", newIndex)
+          return newIndex
+        })
         break
       case "ArrowUp":
         e.preventDefault()
-        setSelectedIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length)
+        setSelectedIndex((prev) => {
+          const newIndex = (prev - 1 + suggestions.length) % suggestions.length
+          console.log("[v0] RichTextEditor: Selected index (up):", newIndex)
+          return newIndex
+        })
         break
       case "Enter":
       case "Tab":
         if (suggestions[selectedIndex]) {
           e.preventDefault()
+          console.log("[v0] RichTextEditor: Inserting mention:", suggestions[selectedIndex].name)
           insertMention(suggestions[selectedIndex])
         }
         break
       case "Escape":
+        console.log("[v0] RichTextEditor: Escape pressed, hiding suggestions")
         setShowSuggestions(false)
         break
     }
   }
 
   const insertMention = (item: Character | Region) => {
-    if (!textareaRef.current) return
+    console.log("[v0] RichTextEditor: Insert mention called")
+    console.log("[v0] RichTextEditor: Item:", item)
+    console.log("[v0] RichTextEditor: Mention start:", mentionStart)
+    console.log("[v0] RichTextEditor: Mention type:", mentionType)
+
+    if (!textareaRef.current) {
+      console.error("[v0] RichTextEditor: Textarea ref is null!")
+      return
+    }
 
     const text = textareaRef.current.value
     const prefix = mentionType === "character" ? "@" : "#"
@@ -150,7 +221,10 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
     const afterMention = text.slice(mentionStart + 1).replace(/^[^\s]*/, "")
     const newText = `${beforeMention}${prefix}${item.name} ${afterMention}`
 
-    console.log("[v0] Inserting mention:", { item, newText })
+    console.log("[v0] RichTextEditor: Before mention:", beforeMention.slice(-20))
+    console.log("[v0] RichTextEditor: After mention:", afterMention.slice(0, 20))
+    console.log("[v0] RichTextEditor: New text length:", newText.length)
+    console.log("[v0] RichTextEditor: Mention inserted:", `${prefix}${item.name}`)
 
     onChange(newText)
     setShowSuggestions(false)
@@ -158,6 +232,7 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
     setTimeout(() => {
       if (textareaRef.current) {
         const cursorPos = mentionStart + prefix.length + item.name.length + 1
+        console.log("[v0] RichTextEditor: Setting cursor position:", cursorPos)
         textareaRef.current.setSelectionRange(cursorPos, cursorPos)
         textareaRef.current.focus()
       }
@@ -165,13 +240,23 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
   }
 
   const applyFormat = (command: string) => {
-    if (!textareaRef.current || disabled) return
+    console.log("[v0] RichTextEditor: Apply format:", command)
+
+    if (!textareaRef.current || disabled) {
+      console.log("[v0] RichTextEditor: Cannot apply format (disabled or no ref)")
+      return
+    }
 
     const start = textareaRef.current.selectionStart
     const end = textareaRef.current.selectionEnd
     const selectedText = value.substring(start, end)
 
-    if (!selectedText) return
+    console.log("[v0] RichTextEditor: Selection:", { start, end, selectedText })
+
+    if (!selectedText) {
+      console.log("[v0] RichTextEditor: No text selected")
+      return
+    }
 
     let formattedText = selectedText
     let wrapper = ""
@@ -192,6 +277,7 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
     }
 
     const newValue = value.substring(0, start) + formattedText + value.substring(end)
+    console.log("[v0] RichTextEditor: Formatted text:", formattedText)
     onChange(newValue)
 
     setTimeout(() => {
@@ -203,12 +289,18 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
   }
 
   const insertList = (ordered: boolean) => {
-    if (!textareaRef.current || disabled) return
+    console.log("[v0] RichTextEditor: Insert list:", ordered ? "ordered" : "unordered")
+
+    if (!textareaRef.current || disabled) {
+      console.log("[v0] RichTextEditor: Cannot insert list (disabled or no ref)")
+      return
+    }
 
     const start = textareaRef.current.selectionStart
     const prefix = ordered ? "1. " : "- "
     const newValue = value.substring(0, start) + prefix + value.substring(start)
 
+    console.log("[v0] RichTextEditor: List prefix:", prefix)
     onChange(newValue)
 
     setTimeout(() => {
@@ -227,7 +319,10 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => applyFormat("bold")}
+          onClick={() => {
+            console.log("[v0] RichTextEditor: Bold button clicked")
+            applyFormat("bold")
+          }}
           disabled={disabled}
           className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
           title="Negrito (Ctrl+B)"
@@ -238,7 +333,10 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => applyFormat("italic")}
+          onClick={() => {
+            console.log("[v0] RichTextEditor: Italic button clicked")
+            applyFormat("italic")
+          }}
           disabled={disabled}
           className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
           title="Itálico (Ctrl+I)"
@@ -249,7 +347,10 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => applyFormat("underline")}
+          onClick={() => {
+            console.log("[v0] RichTextEditor: Underline button clicked")
+            applyFormat("underline")
+          }}
           disabled={disabled}
           className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
           title="Sublinhado (Ctrl+U)"
@@ -263,7 +364,10 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => insertList(false)}
+          onClick={() => {
+            console.log("[v0] RichTextEditor: Unordered list button clicked")
+            insertList(false)
+          }}
           disabled={disabled}
           className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
           title="Lista com marcadores"
@@ -274,7 +378,10 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => insertList(true)}
+          onClick={() => {
+            console.log("[v0] RichTextEditor: Ordered list button clicked")
+            insertList(true)
+          }}
           disabled={disabled}
           className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
           title="Lista numerada"
@@ -355,7 +462,10 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
                     className={`flex items-center gap-3 p-2 rounded cursor-pointer transition-colors ${
                       index === selectedIndex ? "bg-[#EE9B3A]/20" : "hover:bg-[#EE9B3A]/10"
                     }`}
-                    onClick={() => insertMention(item)}
+                    onClick={() => {
+                      console.log("[v0] RichTextEditor: Suggestion clicked:", item.name)
+                      insertMention(item)
+                    }}
                   >
                     <div
                       className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-medium ${

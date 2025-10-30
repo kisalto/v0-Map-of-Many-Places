@@ -123,11 +123,7 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
 
         const existingIds = subregions.filter((s) => !s.id.startsWith("temp-")).map((s) => s.id)
         if (existingIds.length > 0) {
-          await supabase
-            .from("subregions")
-            .delete()
-            .eq("region_id", regionId)
-            .not("id", "in", `(${existingIds.join(",")})`)
+          await supabase.from("subregions").delete().eq("region_id", regionId).not("id", "in", existingIds) // Corrigindo sintaxe do NOT IN para usar array ao invés de string
         }
       } else {
         const { data: newRegion, error } = await supabase.from("regions").insert(data).select().single()

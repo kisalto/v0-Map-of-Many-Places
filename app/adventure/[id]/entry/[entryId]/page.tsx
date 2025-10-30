@@ -13,6 +13,14 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
   const router = useRouter()
   const { id: adventureId, entryId } = params
 
+  useEffect(() => {
+    if (entryId === "new") {
+      console.log("[v0] Detected 'new' as entryId, this should not happen")
+      console.log("[v0] The /entry/new/page.tsx route should handle this")
+      return
+    }
+  }, [entryId])
+
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [saving, setSaving] = useState(false)
@@ -23,6 +31,11 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   useEffect(() => {
+    if (entryId === "new") {
+      setLoading(false)
+      return
+    }
+
     const loadData = async () => {
       const supabase = createClient()
 
@@ -51,9 +64,9 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
       return
     }
 
-    if (!entryId) {
-      console.error("[v0] Validation failed: entryId is missing")
-      alert("Erro: ID da anotação não identificado")
+    if (entryId === "new") {
+      console.error("[v0] Cannot save with entryId 'new'")
+      alert("Erro: Esta página é apenas para edição. Use a página de criação para novas anotações.")
       return
     }
 
@@ -287,6 +300,23 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
     return (
       <div className="min-h-screen bg-[#0B0A13] flex items-center justify-center">
         <p className="text-[#9F8475]">Carregando...</p>
+      </div>
+    )
+  }
+
+  if (entryId === "new") {
+    return (
+      <div className="min-h-screen bg-[#0B0A13] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <p className="text-red-400 text-lg">Erro: Rota incorreta detectada</p>
+          <p className="text-[#9F8475]">Esta página é apenas para edição de anotações existentes.</p>
+          <Button
+            onClick={() => router.push(`/adventure/${adventureId}`)}
+            className="bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13]"
+          >
+            Voltar para Aventura
+          </Button>
+        </div>
       </div>
     )
   }

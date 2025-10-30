@@ -137,13 +137,14 @@ CREATE TABLE chapters (
 -- =====================================================
 -- TABELA: tasks (anotações)
 -- =====================================================
+-- Tornando chapter_id opcional para permitir tasks gerais da adventure
 CREATE TABLE tasks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   adventure_id UUID NOT NULL REFERENCES adventures(id) ON DELETE CASCADE,
-  chapter_id UUID NOT NULL REFERENCES chapters(id) ON DELETE CASCADE,
+  chapter_id UUID REFERENCES chapters(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   content TEXT,
-  is_completed BOOLEAN DEFAULT FALSE,
+  completed BOOLEAN DEFAULT FALSE,
   order_index INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()

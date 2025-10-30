@@ -70,7 +70,7 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
     setMentions([])
 
     const { data: subregionsData } = await supabase
-      .from("subregions")
+      .from("sub_regions")
       .select("*")
       .eq("region_id", region.id)
       .order("created_at")

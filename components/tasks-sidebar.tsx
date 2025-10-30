@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation"
 interface Task {
   id: string
   title: string
-  description: string | null
+  content: string | null
   completed: boolean
   order_index: number
 }
@@ -30,24 +30,40 @@ export function TasksSidebar({ adventureId, tasks: initialTasks }: TasksSidebarP
   const handleAddTask = async () => {
     if (!newTaskTitle.trim()) return
 
+    console.log("[v0] ========== ADD TASK START ==========")
+    console.log("[v0] New task title:", newTaskTitle)
+    console.log("[v0] Adventure ID:", adventureId)
+
     setIsAdding(true)
     const supabase = createClient()
 
-    const { data, error } = await supabase
-      .from("tasks")
-      .insert({
-        adventure_id: adventureId,
-        title: newTaskTitle,
-        completed: false,
-        order_index: tasks.length,
-      })
-      .select()
-      .single()
+    const taskData = {
+      adventure_id: adventureId,
+      title: newTaskTitle,
+      completed: false,
+      order_index: tasks.length,
+    }
 
-    if (!error && data) {
+    console.log("[v0] Task data:", taskData)
+
+    const { data, error } = await supabase.from("tasks").insert(taskData).select().single()
+
+    if (error) {
+      console.error("[v0] Error creating task:", error)
+      console.log("[v0] Error details:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      })
+      alert("Erro ao criar tarefa: " + error.message)
+      console.log("[v0] ========== ADD TASK END (ERROR) ==========")
+    } else if (data) {
+      console.log("[v0] Task created successfully:", data)
       setTasks([...tasks, data])
       setNewTaskTitle("")
       router.refresh()
+      console.log("[v0] ========== ADD TASK END (SUCCESS) ==========")
     }
 
     setIsAdding(false)

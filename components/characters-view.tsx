@@ -1,12 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Plus, Trash2, X, Edit2, Check } from "lucide-react"
+import { Search, Plus, Trash2, X, Edit2, Check, MapPin, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,12 +41,21 @@ interface CharactersViewProps {
   characters: Character[]
 }
 
+interface TimelineEntryMention {
+  id: string
+  title: string
+  content: string | null
+  created_at: string
+  chapter_id: string | null
+}
+
 export function CharactersView({ adventure, characters }: CharactersViewProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(null)
-  const [mentions, setMentions] = useState<any[]>([])
+  const [mentions, setMentions] = useState<TimelineEntryMention[]>([])
+  const [loadingMentions, setLoadingMentions] = useState(false)
   const [isDeleteMode, setIsDeleteMode] = useState(false)
   const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(new Set())
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -56,8 +66,52 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
   const filteredCharacters = characters.filter((char) => char.name.toLowerCase().includes(searchQuery.toLowerCase()))
 
   const handleSelectCharacter = async (character: Character) => {
+    console.log("[v0] Character selected:", character.name)
     setSelectedCharacter(character)
     setMentions([])
+    setLoadingMentions(true)
+
+    try {
+      const supabase = createClient()
+
+      console.log("[v0] Fetching character mentions for character_id:", character.id)
+
+      // Get all timeline entries where this character was mentioned
+      const { data: mentionsData, error: mentionsError } = await supabase
+        .from("character_mentions")
+        .select(
+          `
+          timeline_entry_id,
+          timeline_entries (
+            id,
+            title,
+            content,
+            created_at,
+            chapter_id
+          )
+        `,
+        )
+        .eq("character_id", character.id)
+
+      if (mentionsError) {
+        console.error("[v0] Error fetching character mentions:", mentionsError)
+        return
+      }
+
+      console.log("[v0] Character mentions found:", mentionsData?.length || 0)
+
+      // Extract timeline entries from the mentions
+      const timelineEntries = (mentionsData || [])
+        .map((mention: any) => mention.timeline_entries)
+        .filter((entry: any) => entry !== null) as TimelineEntryMention[]
+
+      console.log("[v0] Timeline entries extracted:", timelineEntries.length)
+      setMentions(timelineEntries)
+    } catch (error) {
+      console.error("[v0] Error loading character mentions:", error)
+    } finally {
+      setLoadingMentions(false)
+    }
   }
 
   const handleEdit = (character: Character) => {
@@ -217,7 +271,7 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
 
       {selectedCharacter && (
         <Dialog open={!!selectedCharacter} onOpenChange={() => setSelectedCharacter(null)}>
-          <DialogContent className="max-w-4xl bg-[#0B0A13] border-[#EE9B3A]/30 text-[#E7D1B1]">
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-[#0B0A13] border-[#EE9B3A]/30 text-[#E7D1B1]">
             <DialogHeader>
               <div className="flex items-center justify-between">
                 <DialogTitle className="text-2xl font-serif text-[#EE9B3A]">{selectedCharacter.name}</DialogTitle>
@@ -262,6 +316,48 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
                   <p className="text-[#E7D1B1] leading-relaxed text-sm">
                     {selectedCharacter.history || selectedCharacter.short_description || "Nenhuma história disponível."}
                   </p>
+                </div>
+
+                <div>
+                  <h4 className="text-[#EE9B3A] font-serif mb-2 flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Aparições nas Anotações ({mentions.length})
+                  </h4>
+                  {loadingMentions ? (
+                    <div className="flex items-center gap-2 text-[#9F8475]">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-sm">Carregando aparições...</span>
+                    </div>
+                  ) : mentions.length > 0 ? (
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {mentions.map((entry) => (
+                        <Card key={entry.id} className="bg-[#302831] border-[#EE9B3A]/30">
+                          <CardContent className="p-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <h5 className="text-sm font-medium text-[#E7D1B1] line-clamp-1">{entry.title}</h5>
+                                {entry.content && (
+                                  <p className="text-xs text-[#9F8475] line-clamp-2 mt-1">{entry.content}</p>
+                                )}
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Badge variant="secondary" className="bg-[#EE9B3A]/20 text-[#EE9B3A] text-xs">
+                                    Anotação
+                                  </Badge>
+                                  <span className="text-xs text-[#9F8475]">
+                                    {new Date(entry.created_at).toLocaleDateString("pt-BR")}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-[#9F8475]">
+                      Este personagem ainda não foi mencionado em nenhuma anotação.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

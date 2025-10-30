@@ -1,12 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Plus, Trash2, X, Edit2, Check } from "lucide-react"
+import { Search, Plus, Trash2, X, Edit2, Check, MapPin, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,12 +47,21 @@ interface RegionsViewProps {
   regions: Region[]
 }
 
+interface TimelineEntryMention {
+  id: string
+  title: string
+  content: string | null
+  created_at: string
+  chapter_id: string | null
+}
+
 export function RegionsView({ adventure, regions }: RegionsViewProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [editingRegion, setEditingRegion] = useState<Region | null>(null)
-  const [mentions, setMentions] = useState<any[]>([])
+  const [mentions, setMentions] = useState<TimelineEntryMention[]>([])
+  const [loadingMentions, setLoadingMentions] = useState(false)
   const [subregions, setSubregions] = useState<Subregion[]>([])
   const [isDeleteMode, setIsDeleteMode] = useState(false)
   const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(new Set())
@@ -63,11 +73,49 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
   const filteredRegions = regions.filter((region) => region.name.toLowerCase().includes(searchQuery.toLowerCase()))
 
   const handleSelectRegion = async (region: Region) => {
+    console.log("[v0] Region selected:", region.name)
     setSelectedRegion(region)
+    setMentions([])
+    setLoadingMentions(true)
 
     const supabase = createClient()
 
-    setMentions([])
+    try {
+      console.log("[v0] Fetching region mentions for region_id:", region.id)
+
+      const { data: mentionsData, error: mentionsError } = await supabase
+        .from("region_mentions")
+        .select(
+          `
+          timeline_entry_id,
+          timeline_entries (
+            id,
+            title,
+            content,
+            created_at,
+            chapter_id
+          )
+        `,
+        )
+        .eq("region_id", region.id)
+
+      if (mentionsError) {
+        console.error("[v0] Error fetching region mentions:", mentionsError)
+      } else {
+        console.log("[v0] Region mentions found:", mentionsData?.length || 0)
+
+        const timelineEntries = (mentionsData || [])
+          .map((mention: any) => mention.timeline_entries)
+          .filter((entry: any) => entry !== null) as TimelineEntryMention[]
+
+        console.log("[v0] Timeline entries extracted:", timelineEntries.length)
+        setMentions(timelineEntries)
+      }
+    } catch (error) {
+      console.error("[v0] Error loading region mentions:", error)
+    } finally {
+      setLoadingMentions(false)
+    }
 
     const { data: subregionsData } = await supabase
       .from("sub_regions")
@@ -231,7 +279,7 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
 
       {selectedRegion && (
         <Dialog open={!!selectedRegion} onOpenChange={() => setSelectedRegion(null)}>
-          <DialogContent className="max-w-4xl bg-[#0B0A13] border-[#EE9B3A]/30 text-[#E7D1B1]">
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-[#0B0A13] border-[#EE9B3A]/30 text-[#E7D1B1]">
             <DialogHeader>
               <div className="flex items-center justify-between">
                 <DialogTitle className="text-2xl font-serif text-[#EE9B3A]">{selectedRegion.name}</DialogTitle>
@@ -265,20 +313,62 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
                 </p>
               </div>
 
-              <div>
-                <h4 className="text-[#EE9B3A] font-serif mb-2">Pontos de Interesse</h4>
-                {subregions.length > 0 ? (
-                  <div className="space-y-2">
-                    {subregions.map((sub) => (
-                      <div key={sub.id} className="text-[#E7D1B1] text-sm">
-                        <p className="font-medium">{sub.name}</p>
-                        {sub.description && <p className="text-[#9F8475] text-xs">{sub.description}</p>}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-[#9F8475] text-sm">Nenhum ponto de interesse registrado.</p>
-                )}
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-[#EE9B3A] font-serif mb-2">Pontos de Interesse</h4>
+                  {subregions.length > 0 ? (
+                    <div className="space-y-2">
+                      {subregions.map((sub) => (
+                        <div key={sub.id} className="text-[#E7D1B1] text-sm">
+                          <p className="font-medium">{sub.name}</p>
+                          {sub.description && <p className="text-[#9F8475] text-xs">{sub.description}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[#9F8475] text-sm">Nenhum ponto de interesse registrado.</p>
+                  )}
+                </div>
+
+                <div>
+                  <h4 className="text-[#EE9B3A] font-serif mb-2 flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Aparições nas Anotações ({mentions.length})
+                  </h4>
+                  {loadingMentions ? (
+                    <div className="flex items-center gap-2 text-[#9F8475]">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-sm">Carregando aparições...</span>
+                    </div>
+                  ) : mentions.length > 0 ? (
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {mentions.map((entry) => (
+                        <Card key={entry.id} className="bg-[#302831] border-[#EE9B3A]/30">
+                          <CardContent className="p-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <h5 className="text-sm font-medium text-[#E7D1B1] line-clamp-1">{entry.title}</h5>
+                                {entry.content && (
+                                  <p className="text-xs text-[#9F8475] line-clamp-2 mt-1">{entry.content}</p>
+                                )}
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Badge variant="secondary" className="bg-[#EE9B3A]/20 text-[#EE9B3A] text-xs">
+                                    Anotação
+                                  </Badge>
+                                  <span className="text-xs text-[#9F8475]">
+                                    {new Date(entry.created_at).toLocaleDateString("pt-BR")}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-[#9F8475]">Esta região ainda não foi mencionada em nenhuma anotação.</p>
+                  )}
+                </div>
               </div>
             </div>
           </DialogContent>

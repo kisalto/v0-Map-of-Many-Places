@@ -83,6 +83,21 @@ export function CreateAdventureDialog({ children }: CreateAdventureDialogProps) 
 
       console.log("[v0] Adventure created successfully:", data)
 
+      console.log("[v0] Creating adventure_member for creator...")
+      const { error: memberError } = await supabase.from("adventure_members").insert({
+        adventure_id: data.id,
+        profile_id: user.id,
+        role: "owner", // Owner of the adventure
+      })
+
+      if (memberError) {
+        console.error("[v0] Error creating adventure_member:", memberError)
+        // Don't throw error here - adventure was created successfully
+        // Just log the error and continue
+      } else {
+        console.log("[v0] Adventure_member created successfully")
+      }
+
       // Reset form and close dialog
       setTitle("")
       setDescription("")
@@ -101,30 +116,30 @@ export function CreateAdventureDialog({ children }: CreateAdventureDialogProps) 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="bg-slate-800 border-slate-700 text-white">
+      <DialogContent className="bg-[#302831] border-[#EE9B3A]/30 text-[#E7D1B1]">
         <DialogHeader>
-          <DialogTitle>Nova Aventura</DialogTitle>
-          <DialogDescription className="text-slate-300">
+          <DialogTitle className="text-[#E7D1B1]">Nova Aventura</DialogTitle>
+          <DialogDescription className="text-[#9F8475]">
             Crie uma nova aventura para organizar sua campanha de RPG.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="title" className="text-slate-200">
+              <Label htmlFor="title" className="text-[#E7D1B1]">
                 Título da Aventura
               </Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Ex: A Maldição do Dragão Ancião"
-                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                placeholder="Ex: A Maldição do Dragão"
+                className="bg-[#0B0A13] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475]"
                 required
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description" className="text-slate-200">
+              <Label htmlFor="description" className="text-[#E7D1B1]">
                 Descrição (opcional)
               </Label>
               <Textarea
@@ -132,7 +147,7 @@ export function CreateAdventureDialog({ children }: CreateAdventureDialogProps) 
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Descreva brevemente sua aventura..."
-                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 min-h-[100px]"
+                className="bg-[#0B0A13] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475] min-h-[100px]"
               />
             </div>
             {error && (
@@ -146,14 +161,14 @@ export function CreateAdventureDialog({ children }: CreateAdventureDialogProps) 
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="border-slate-600 text-slate-300 hover:bg-slate-700"
+              className="border-[#302831] text-[#E7D1B1] hover:bg-[#302831] bg-transparent"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={isLoading || !title.trim()}
-              className="bg-amber-600 hover:bg-amber-700 text-white"
+              className="bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13]"
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Criar Aventura

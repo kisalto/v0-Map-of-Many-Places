@@ -42,33 +42,34 @@ export function CharacterMentionInput({
 
   // Load characters when component mounts
   useEffect(() => {
+    console.log("[v0] CharacterMentionInput: Component mounted")
+    console.log("[v0] CharacterMentionInput: Adventure ID:", adventureId)
+
     const loadCharacters = async () => {
+      console.log("[v0] CharacterMentionInput: Loading characters...")
       const supabase = createClient()
 
-      // Load NPCs
-      const { data: npcs } = await supabase.from("npcs").select("id, name, status").eq("adventure_id", adventureId)
-
-      // Load Players
-      const { data: players } = await supabase
-        .from("adventure_players")
-        .select("id, character_name, status")
+      const { data: allChars, error } = await supabase
+        .from("characters")
+        .select("id, name, character_type")
         .eq("adventure_id", adventureId)
 
-      const allCharacters: Character[] = [
-        ...(npcs || []).map((npc) => ({
-          id: npc.id,
-          name: npc.name,
-          type: "npc" as const,
-          status: npc.status,
-        })),
-        ...(players || []).map((player) => ({
-          id: player.id,
-          name: player.character_name,
-          type: "player" as const,
-          status: player.status,
-        })),
-      ]
+      if (error) {
+        console.error("[v0] CharacterMentionInput: Error loading characters:", error)
+        return
+      }
 
+      console.log("[v0] CharacterMentionInput: Characters loaded:", allChars?.length || 0)
+      console.log("[v0] CharacterMentionInput: Character details:", allChars)
+
+      const allCharacters: Character[] = (allChars || []).map((char) => ({
+        id: char.id,
+        name: char.name,
+        type: char.character_type as "npc" | "player",
+        status: "active",
+      }))
+
+      console.log("[v0] CharacterMentionInput: Processed characters:", allCharacters)
       setCharacters(allCharacters)
     }
 
@@ -80,15 +81,24 @@ export function CharacterMentionInput({
     const newValue = e.target.value
     const cursorPosition = e.target.selectionStart
 
+    console.log("[v0] CharacterMentionInput: Text changed")
+    console.log("[v0] CharacterMentionInput: New value length:", newValue.length)
+    console.log("[v0] CharacterMentionInput: Cursor position:", cursorPosition)
+
     onChange(newValue)
 
     // Check for @ mention
     const textBeforeCursor = newValue.slice(0, cursorPosition)
     const lastAtIndex = textBeforeCursor.lastIndexOf("@")
 
+    console.log("[v0] CharacterMentionInput: Last @ index:", lastAtIndex)
+
     if (lastAtIndex !== -1) {
       const textAfterAt = textBeforeCursor.slice(lastAtIndex + 1)
       const hasSpaceAfterAt = textAfterAt.includes(" ")
+
+      console.log("[v0] CharacterMentionInput: Text after @:", textAfterAt)
+      console.log("[v0] CharacterMentionInput: Has space after @:", hasSpaceAfterAt)
 
       if (!hasSpaceAfterAt) {
         setMentionStart(lastAtIndex)
@@ -96,13 +106,25 @@ export function CharacterMentionInput({
 
         // Filter characters based on query
         const filtered = characters.filter((char) => char.name.toLowerCase().includes(textAfterAt.toLowerCase()))
+
+        console.log("[v0] CharacterMentionInput: Query:", textAfterAt)
+        console.log("[v0] CharacterMentionInput: Filtered characters:", filtered.length)
+        console.log(
+          "[v0] CharacterMentionInput: Filtered character names:",
+          filtered.map((c) => c.name),
+        )
+
         setSuggestions(filtered)
         setShowSuggestions(filtered.length > 0)
         setSelectedIndex(0)
+
+        console.log("[v0] CharacterMentionInput: Show suggestions:", filtered.length > 0)
       } else {
+        console.log("[v0] CharacterMentionInput: Hiding suggestions (space after @)")
         setShowSuggestions(false)
       }
     } else {
+      console.log("[v0] CharacterMentionInput: No @ found, hiding suggestions")
       setShowSuggestions(false)
     }
   }
@@ -111,23 +133,35 @@ export function CharacterMentionInput({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!showSuggestions) return
 
+    console.log("[v0] CharacterMentionInput: Key pressed:", e.key)
+
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault()
-        setSelectedIndex((prev) => (prev + 1) % suggestions.length)
+        setSelectedIndex((prev) => {
+          const newIndex = (prev + 1) % suggestions.length
+          console.log("[v0] CharacterMentionInput: Selected index (down):", newIndex)
+          return newIndex
+        })
         break
       case "ArrowUp":
         e.preventDefault()
-        setSelectedIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length)
+        setSelectedIndex((prev) => {
+          const newIndex = (prev - 1 + suggestions.length) % suggestions.length
+          console.log("[v0] CharacterMentionInput: Selected index (up):", newIndex)
+          return newIndex
+        })
         break
       case "Enter":
       case "Tab":
         e.preventDefault()
         if (suggestions[selectedIndex]) {
+          console.log("[v0] CharacterMentionInput: Inserting mention:", suggestions[selectedIndex].name)
           insertMention(suggestions[selectedIndex])
         }
         break
       case "Escape":
+        console.log("[v0] CharacterMentionInput: Escape pressed, hiding suggestions")
         setShowSuggestions(false)
         break
     }
@@ -135,9 +169,17 @@ export function CharacterMentionInput({
 
   // Insert mention into text
   const insertMention = (character: Character) => {
+    console.log("[v0] CharacterMentionInput: Inserting mention for:", character.name)
+    console.log("[v0] CharacterMentionInput: Mention start position:", mentionStart)
+    console.log("[v0] CharacterMentionInput: Current query:", mentionQuery)
+
     const beforeMention = value.slice(0, mentionStart)
     const afterMention = value.slice(mentionStart + mentionQuery.length + 1)
     const newValue = `${beforeMention}@${character.name} ${afterMention}`
+
+    console.log("[v0] CharacterMentionInput: New value:", newValue)
+    console.log("[v0] CharacterMentionInput: Before mention:", beforeMention)
+    console.log("[v0] CharacterMentionInput: After mention:", afterMention)
 
     onChange(newValue)
     setShowSuggestions(false)
@@ -146,6 +188,7 @@ export function CharacterMentionInput({
     setTimeout(() => {
       if (textareaRef.current) {
         const newCursorPosition = mentionStart + character.name.length + 2
+        console.log("[v0] CharacterMentionInput: Setting cursor position:", newCursorPosition)
         textareaRef.current.focus()
         textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition)
       }
@@ -174,7 +217,10 @@ export function CharacterMentionInput({
                   className={`flex items-center gap-3 p-2 rounded cursor-pointer transition-colors ${
                     index === selectedIndex ? "bg-slate-700" : "hover:bg-slate-700/50"
                   }`}
-                  onClick={() => insertMention(character)}
+                  onClick={() => {
+                    console.log("[v0] CharacterMentionInput: Suggestion clicked:", character.name)
+                    insertMention(character)
+                  }}
                 >
                   <Avatar className="h-6 w-6 bg-slate-600">
                     <AvatarFallback className="bg-slate-600 text-slate-300 text-xs">

@@ -46,25 +46,27 @@ export default async function AdventurePage({ params }: AdventurePageProps) {
     .eq("adventure_id", id)
     .order("order_index", { ascending: true })
 
-  const { data: entries } = await supabase
-    .from("timeline_entries")
-    .select("*")
-    .eq("adventure_id", id)
-    .order("order_index", { ascending: true })
-
-  const { data: tasks } = await supabase
+  const { data: sidebarTasks } = await supabase
     .from("tasks")
     .select("*")
     .eq("adventure_id", id)
+    .is("chapter_id", null)
+    .order("order_index", { ascending: true })
+
+  const { data: chapterTasks } = await supabase
+    .from("tasks")
+    .select("*")
+    .eq("adventure_id", id)
+    .not("chapter_id", "is", null)
     .order("order_index", { ascending: true })
 
   return (
     <div className="h-screen bg-[#0B0A13] flex flex-col">
       <AdventureHeader adventure={adventure} profile={profile} />
       <div className="flex-1 flex overflow-hidden">
-        <TasksSidebar adventureId={id} tasks={tasks || []} />
+        <TasksSidebar adventureId={id} tasks={sidebarTasks || []} />
         <main className="flex-1 overflow-auto">
-          <TrelloBoard adventureId={id} chapters={chapters || []} entries={entries || []} />
+          <TrelloBoard adventureId={id} chapters={chapters || []} entries={chapterTasks || []} />
         </main>
       </div>
     </div>

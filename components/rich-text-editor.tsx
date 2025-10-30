@@ -441,12 +441,12 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
           onKeyDown={handleKeyDown}
           disabled={disabled}
           spellCheck={false}
-          className="w-full min-h-[500px] p-4 bg-[#0B0A13] border border-[#302831] rounded-lg text-transparent caret-[#E7D1B1] focus:outline-none focus:ring-2 focus:ring-[#EE9B3A]/50 leading-relaxed resize-none font-sans disabled:opacity-50 disabled:cursor-not-allowed relative z-10"
+          className="w-full min-h-[500px] p-4 bg-[#0B0A13] border border-[#302831] rounded-lg text-transparent caret-[#E7D1B1] focus:outline-none focus:ring-2 focus:ring-[#EE9B3A]/50 leading-relaxed resize-none font-sans disabled:opacity-50 disabled:cursor-not-allowed relative z-20"
           placeholder="Comece a escrever sua anotação... Use @ para mencionar personagens e # para mencionar regiões."
         />
 
         <div
-          className="absolute top-0 left-0 w-full min-h-[500px] p-4 pointer-events-none whitespace-pre-wrap break-words leading-relaxed font-sans z-20"
+          className="absolute top-0 left-0 w-full min-h-[500px] p-4 pointer-events-none whitespace-pre-wrap break-words leading-relaxed font-sans z-10"
           aria-hidden="true"
         >
           {renderColoredText(value)}

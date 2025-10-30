@@ -169,7 +169,7 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
             <div key={chapter.id} className="flex-shrink-0 w-80">
               <Card className="bg-[#302831] border-[#EE9B3A]/30 h-full flex flex-col">
                 <CardContent className="p-4 flex flex-col h-full">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-4 gap-2">
                     {editingChapterId === chapter.id ? (
                       <Input
                         value={editingChapterTitle}
@@ -191,13 +191,19 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-[#E7D1B1]">
-                          <MoreVertical className="h-4 w-4" />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-[#E7D1B1] hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A] flex-shrink-0"
+                          onClick={() => console.log("[v0] Dropdown menu clicked for chapter:", chapter.id)}
+                        >
+                          <MoreVertical className="h-5 w-5" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent className="bg-[#0B0A13] border-[#302831]">
+                      <DropdownMenuContent className="bg-[#0B0A13] border-[#302831]" align="end" sideOffset={5}>
                         <DropdownMenuItem
                           onClick={() => {
+                            console.log("[v0] Edit chapter clicked:", chapter.id)
                             setEditingChapterId(chapter.id)
                             setEditingChapterTitle(chapter.title)
                           }}
@@ -207,7 +213,10 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
                           Editar
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => setConfirmDeleteChapterId(chapter.id)}
+                          onClick={() => {
+                            console.log("[v0] Delete chapter clicked:", chapter.id)
+                            setConfirmDeleteChapterId(chapter.id)
+                          }}
                           className="text-red-400 hover:bg-[#302831] cursor-pointer"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />

@@ -79,10 +79,18 @@ export function TasksSidebar({ adventureId, tasks: initialTasks }: TasksSidebarP
   }
 
   const handleDeleteTask = async (taskId: string) => {
+    console.log("[v0] Deleting task:", taskId)
     const supabase = createClient()
 
-    await supabase.from("tasks").delete().eq("id", taskId)
+    const { error } = await supabase.from("tasks").delete().eq("id", taskId)
 
+    if (error) {
+      console.error("[v0] Error deleting task:", error)
+      alert("Erro ao deletar tarefa: " + error.message)
+      return
+    }
+
+    console.log("[v0] Task deleted successfully")
     setTasks(tasks.filter((t) => t.id !== taskId))
     router.refresh()
   }
@@ -109,10 +117,13 @@ export function TasksSidebar({ adventureId, tasks: initialTasks }: TasksSidebarP
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => handleDeleteTask(task.id)}
-              className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 text-red-400 hover:text-red-300"
+              onClick={() => {
+                console.log("[v0] Delete task button clicked:", task.id)
+                handleDeleteTask(task.id)
+              }}
+              className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0 text-red-400 hover:text-red-300 hover:bg-red-400/10 flex-shrink-0"
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         ))}

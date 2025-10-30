@@ -21,6 +21,7 @@ import {
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { RegionCrudDialog } from "@/components/region-crud-dialog"
+import Link from "next/link"
 
 interface Subregion {
   id: string
@@ -343,26 +344,28 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
                   ) : mentions.length > 0 ? (
                     <div className="space-y-2 max-h-60 overflow-y-auto">
                       {mentions.map((entry) => (
-                        <Card key={entry.id} className="bg-[#302831] border-[#EE9B3A]/30">
-                          <CardContent className="p-3">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1 min-w-0">
-                                <h5 className="text-sm font-medium text-[#E7D1B1] line-clamp-1">{entry.title}</h5>
-                                {entry.content && (
-                                  <p className="text-xs text-[#9F8475] line-clamp-2 mt-1">{entry.content}</p>
-                                )}
-                                <div className="flex items-center gap-2 mt-2">
-                                  <Badge variant="secondary" className="bg-[#EE9B3A]/20 text-[#EE9B3A] text-xs">
-                                    Anotação
-                                  </Badge>
-                                  <span className="text-xs text-[#9F8475]">
-                                    {new Date(entry.created_at).toLocaleDateString("pt-BR")}
-                                  </span>
+                        <Link key={entry.id} href={`/adventure/${adventure.id}/entry/${entry.id}`} className="block">
+                          <Card className="bg-[#302831] border-[#EE9B3A]/30 hover:bg-[#302831]/90 transition-colors cursor-pointer">
+                            <CardContent className="p-3">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <h5 className="text-sm font-medium text-[#E7D1B1] line-clamp-1">{entry.title}</h5>
+                                  {entry.content && (
+                                    <p className="text-xs text-[#9F8475] line-clamp-2 mt-1">{entry.content}</p>
+                                  )}
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <Badge variant="secondary" className="bg-[#EE9B3A]/20 text-[#EE9B3A] text-xs">
+                                      Anotação
+                                    </Badge>
+                                    <span className="text-xs text-[#9F8475]">
+                                      {new Date(entry.created_at).toLocaleDateString("pt-BR")}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </CardContent>
-                        </Card>
+                            </CardContent>
+                          </Card>
+                        </Link>
                       ))}
                     </div>
                   ) : (

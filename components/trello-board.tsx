@@ -49,6 +49,7 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
   const [editingChapterTitle, setEditingChapterTitle] = useState("")
   const [confirmCompleteChapterId, setConfirmCompleteChapterId] = useState<string | null>(null)
   const [confirmReopenChapterId, setConfirmReopenChapterId] = useState<string | null>(null)
+  const [confirmDeleteChapterId, setConfirmDeleteChapterId] = useState<string | null>(null)
   const router = useRouter()
 
   const handleAddChapter = async () => {
@@ -122,11 +123,21 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
   }
 
   const handleDeleteChapter = async (chapterId: string) => {
+    console.log("[v0] Deleting chapter:", chapterId)
     const supabase = createClient()
 
-    await supabase.from("chapters").delete().eq("id", chapterId)
+    const { error } = await supabase.from("chapters").delete().eq("id", chapterId)
 
+    if (error) {
+      console.error("[v0] Error deleting chapter:", error)
+      alert("Erro ao deletar capítulo")
+      return
+    }
+
+    console.log("[v0] Chapter deleted successfully")
     setChapters(chapters.filter((c) => c.id !== chapterId))
+    setEntries(entries.filter((e) => e.chapter_id !== chapterId))
+    setConfirmDeleteChapterId(null)
     router.refresh()
   }
 
@@ -196,11 +207,11 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
                           Editar
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => handleDeleteChapter(chapter.id)}
+                          onClick={() => setConfirmDeleteChapterId(chapter.id)}
                           className="text-red-400 hover:bg-[#302831] cursor-pointer"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
-                          Deletar
+                          Deletar Capítulo e Anotações
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -333,6 +344,29 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
               className="bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13]"
             >
               Reabrir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!confirmDeleteChapterId} onOpenChange={() => setConfirmDeleteChapterId(null)}>
+        <AlertDialogContent className="bg-[#302831] border-[#EE9B3A]/30">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-[#E7D1B1]">Deletar Capítulo?</AlertDialogTitle>
+            <AlertDialogDescription className="text-[#9F8475]">
+              Esta ação não pode ser desfeita. Isso vai deletar permanentemente o capítulo e todas as anotações dentro
+              dele.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-transparent border-[#302831] text-[#E7D1B1] hover:bg-[#302831]">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => confirmDeleteChapterId && handleDeleteChapter(confirmDeleteChapterId)}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Deletar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -73,7 +73,7 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
 
   const loadSubregions = async (regionId: string) => {
     const supabase = createClient()
-    const { data } = await supabase.from("subregions").select("*").eq("region_id", regionId).order("created_at")
+    const { data } = await supabase.from("sub_regions").select("*").eq("region_id", regionId).order("created_at")
     setSubregions(data || [])
   }
 
@@ -123,7 +123,9 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
 
         const existingIds = subregions.filter((s) => !s.id.startsWith("temp-")).map((s) => s.id)
         if (existingIds.length > 0) {
-          await supabase.from("subregions").delete().eq("region_id", regionId).not("id", "in", existingIds) // Corrigindo sintaxe do NOT IN para usar array ao invés de string
+          await supabase.from("sub_regions").delete().eq("region_id", regionId).not("id", "in", existingIds)
+        } else {
+          await supabase.from("sub_regions").delete().eq("region_id", regionId)
         }
       } else {
         const { data: newRegion, error } = await supabase.from("regions").insert(data).select().single()
@@ -141,7 +143,7 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
         }))
 
       if (newSubregions.length > 0) {
-        const { error: subError } = await supabase.from("subregions").insert(newSubregions)
+        const { error: subError } = await supabase.from("sub_regions").insert(newSubregions)
         if (subError) console.error("[v0] Error creating subregions:", subError)
       }
 
@@ -213,62 +215,58 @@ export function RegionCrudDialog({ open, onOpenChange, adventureId, region, onSu
             />
           </div>
 
-          {region && (
-            <>
-              <Separator className="bg-[#302831]" />
-              <div className="space-y-3">
-                <Label className="text-[#E7D1B1]">Regiões Internas</Label>
+          <Separator className="bg-[#302831]" />
+          <div className="space-y-3">
+            <Label className="text-[#E7D1B1]">Regiões Internas</Label>
 
-                {subregions.length > 0 && (
-                  <div className="space-y-2">
-                    {subregions.map((sub) => (
-                      <div
-                        key={sub.id}
-                        className="flex items-start gap-2 p-3 bg-[#0B0A13] rounded-lg border border-[#302831]"
-                      >
-                        <div className="flex-1">
-                          <p className="text-[#E7D1B1] font-medium">{sub.name}</p>
-                          {sub.description && <p className="text-[#9F8475] text-sm mt-1">{sub.description}</p>}
-                        </div>
-                        <Button
-                          onClick={() => handleRemoveSubregion(sub.id)}
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="space-y-2 p-3 bg-[#0B0A13] rounded-lg border border-[#302831]">
-                  <Input
-                    value={newSubregionName}
-                    onChange={(e) => setNewSubregionName(e.target.value)}
-                    placeholder="Nome da região interna"
-                    className="bg-[#302831] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475]"
-                  />
-                  <Input
-                    value={newSubregionDesc}
-                    onChange={(e) => setNewSubregionDesc(e.target.value)}
-                    placeholder="Descrição (opcional)"
-                    className="bg-[#302831] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475]"
-                  />
-                  <Button
-                    onClick={handleAddSubregion}
-                    disabled={!newSubregionName.trim()}
-                    variant="outline"
-                    size="sm"
-                    className="w-full border-[#EE9B3A]/30 text-[#EE9B3A] hover:bg-[#EE9B3A]/10 bg-transparent"
+            {subregions.length > 0 && (
+              <div className="space-y-2">
+                {subregions.map((sub) => (
+                  <div
+                    key={sub.id}
+                    className="flex items-start gap-2 p-3 bg-[#0B0A13] rounded-lg border border-[#302831]"
                   >
-                    Adicionar Região Interna
-                  </Button>
-                </div>
+                    <div className="flex-1">
+                      <p className="text-[#E7D1B1] font-medium">{sub.name}</p>
+                      {sub.description && <p className="text-[#9F8475] text-sm mt-1">{sub.description}</p>}
+                    </div>
+                    <Button
+                      onClick={() => handleRemoveSubregion(sub.id)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
-            </>
-          )}
+            )}
+
+            <div className="space-y-2 p-3 bg-[#0B0A13] rounded-lg border border-[#302831]">
+              <Input
+                value={newSubregionName}
+                onChange={(e) => setNewSubregionName(e.target.value)}
+                placeholder="Nome da região interna"
+                className="bg-[#302831] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475]"
+              />
+              <Input
+                value={newSubregionDesc}
+                onChange={(e) => setNewSubregionDesc(e.target.value)}
+                placeholder="Descrição (opcional)"
+                className="bg-[#302831] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475]"
+              />
+              <Button
+                onClick={handleAddSubregion}
+                disabled={!newSubregionName.trim()}
+                variant="outline"
+                size="sm"
+                className="w-full border-[#EE9B3A]/30 text-[#EE9B3A] hover:bg-[#EE9B3A]/10 bg-transparent"
+              >
+                Adicionar Região Interna
+              </Button>
+            </div>
+          </div>
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-[#302831]">

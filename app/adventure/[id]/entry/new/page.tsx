@@ -22,13 +22,18 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
   const [showSaveConfirm, setShowSaveConfirm] = useState(false)
 
   useEffect(() => {
+    console.log("[v0] NewEntryPage mounted")
+    console.log("[v0] Adventure ID:", adventureId)
+    console.log("[v0] Chapter ID:", chapterId)
+
     const loadAdventure = async () => {
       const supabase = createClient()
       const { data } = await supabase.from("adventures").select("*").eq("id", adventureId).single()
+      console.log("[v0] Adventure loaded:", data?.title)
       setAdventure(data)
     }
     loadAdventure()
-  }, [adventureId])
+  }, [adventureId, chapterId])
 
   const handleSave = async () => {
     console.log("[v0] ========== SAVE NEW ENTRY START ==========")
@@ -87,9 +92,8 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
           chapter_id: chapterId,
           title: title.trim(),
           content: content,
-          status: "pending",
+          is_completed: false,
           order_index: nextOrderIndex,
-          completed: false,
         })
         .select()
         .single()

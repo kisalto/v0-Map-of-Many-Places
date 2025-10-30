@@ -492,7 +492,8 @@ function renderColoredText(text: string) {
   const parts: React.ReactNode[] = []
   let lastIndex = 0
 
-  const mentionRegex = /(@[^@#\s]+)|(#[^@#\s]+)/g
+  // Não captura parênteses ou outros caracteres especiais
+  const mentionRegex = /(@[\w\s]+?)(?=\s|$|[^\w\s])|(#[\w\s]+?)(?=\s|$|[^\w\s])/g
   let match
 
   while ((match = mentionRegex.exec(text)) !== null) {
@@ -504,7 +505,7 @@ function renderColoredText(text: string) {
       )
     }
 
-    const mention = match[0]
+    const mention = match[0].trim()
     const isCharacter = mention.startsWith("@")
     parts.push(
       <span

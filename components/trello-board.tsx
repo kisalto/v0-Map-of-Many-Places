@@ -189,25 +189,35 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
                       <h3 className="font-semibold text-[#EE9B3A] text-lg flex-1 text-center">{chapter.title}</h3>
                     )}
 
-                    <DropdownMenu>
+                    <DropdownMenu modal={false}>
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-[#E7D1B1] hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A] flex-shrink-0"
-                          onClick={() => console.log("[v0] Dropdown menu clicked for chapter:", chapter.id)}
+                          className="h-9 w-9 p-0 text-[#E7D1B1] hover:bg-[#EE9B3A]/30 hover:text-[#EE9B3A] flex-shrink-0 transition-all"
+                          onClick={(e) => {
+                            console.log("[v0] Dropdown menu button clicked for chapter:", chapter.id)
+                            console.log("[v0] Button element:", e.currentTarget)
+                          }}
                         >
-                          <MoreVertical className="h-5 w-5" />
+                          <MoreVertical className="h-6 w-6" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent className="bg-[#0B0A13] border-[#302831]" align="end" sideOffset={5}>
+                      <DropdownMenuContent
+                        className="bg-[#0B0A13] border-[#302831] z-[100]"
+                        align="end"
+                        sideOffset={8}
+                        onOpenAutoFocus={(e) => {
+                          console.log("[v0] Dropdown opened for chapter:", chapter.id)
+                        }}
+                      >
                         <DropdownMenuItem
                           onClick={() => {
                             console.log("[v0] Edit chapter clicked:", chapter.id)
                             setEditingChapterId(chapter.id)
                             setEditingChapterTitle(chapter.title)
                           }}
-                          className="text-[#E7D1B1] hover:bg-[#302831] cursor-pointer"
+                          className="text-[#E7D1B1] hover:bg-[#302831] cursor-pointer focus:bg-[#302831] focus:text-[#EE9B3A]"
                         >
                           <Pencil className="h-4 w-4 mr-2" />
                           Editar
@@ -217,7 +227,7 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
                             console.log("[v0] Delete chapter clicked:", chapter.id)
                             setConfirmDeleteChapterId(chapter.id)
                           }}
-                          className="text-red-400 hover:bg-[#302831] cursor-pointer"
+                          className="text-red-400 hover:bg-[#302831] cursor-pointer focus:bg-[#302831] focus:text-red-300"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Deletar Capítulo e Anotações

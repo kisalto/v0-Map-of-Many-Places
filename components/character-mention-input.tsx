@@ -45,29 +45,18 @@ export function CharacterMentionInput({
     const loadCharacters = async () => {
       const supabase = createClient()
 
-      // Load NPCs
-      const { data: npcs } = await supabase.from("npcs").select("id, name, status").eq("adventure_id", adventureId)
-
-      // Load Players
-      const { data: players } = await supabase
-        .from("adventure_players")
-        .select("id, character_name, status")
+      // Load characters from a single table
+      const { data: allChars } = await supabase
+        .from("characters")
+        .select("id, name, character_type")
         .eq("adventure_id", adventureId)
 
-      const allCharacters: Character[] = [
-        ...(npcs || []).map((npc) => ({
-          id: npc.id,
-          name: npc.name,
-          type: "npc" as const,
-          status: npc.status,
-        })),
-        ...(players || []).map((player) => ({
-          id: player.id,
-          name: player.character_name,
-          type: "player" as const,
-          status: player.status,
-        })),
-      ]
+      const allCharacters: Character[] = (allChars || []).map((char) => ({
+        id: char.id,
+        name: char.name,
+        type: char.character_type as "npc" | "player",
+        status: "active", // Default status since we don't have this field in the table
+      }))
 
       setCharacters(allCharacters)
     }

@@ -334,19 +334,19 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
           onKeyDown={handleKeyDown}
           disabled={disabled}
           spellCheck={false}
-          className="w-full min-h-[500px] p-4 bg-[#0B0A13] border border-[#302831] rounded-lg text-transparent caret-[#E7D1B1] focus:outline-none focus:ring-2 focus:ring-[#EE9B3A]/50 leading-relaxed resize-none font-sans disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full min-h-[500px] p-4 bg-[#0B0A13] border border-[#302831] rounded-lg text-transparent caret-[#E7D1B1] focus:outline-none focus:ring-2 focus:ring-[#EE9B3A]/50 leading-relaxed resize-none font-sans disabled:opacity-50 disabled:cursor-not-allowed relative z-10"
           placeholder="Comece a escrever sua anotação... Use @ para mencionar personagens e # para mencionar regiões."
         />
 
         <div
-          className="absolute top-0 left-0 w-full min-h-[500px] p-4 pointer-events-none whitespace-pre-wrap break-words leading-relaxed font-sans"
+          className="absolute top-0 left-0 w-full min-h-[500px] p-4 pointer-events-none whitespace-pre-wrap break-words leading-relaxed font-sans z-20"
           aria-hidden="true"
         >
           {renderColoredText(value)}
         </div>
 
         {showSuggestions && suggestions.length > 0 && (
-          <Card className="absolute z-50 mt-1 w-64 bg-[#302831] border-[#EE9B3A]/30 shadow-lg">
+          <Card className="absolute z-[200] mt-1 w-64 bg-[#302831] border-[#EE9B3A]/30 shadow-lg">
             <CardContent className="p-2">
               <div className="space-y-1">
                 {suggestions.map((item, index) => (

@@ -92,7 +92,7 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
           chapter_id: chapterId,
           title: title.trim(),
           content: content,
-          is_completed: false,
+          completed: false,
           order_index: nextOrderIndex,
         })
         .select()

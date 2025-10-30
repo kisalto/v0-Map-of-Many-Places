@@ -48,6 +48,7 @@ interface TimelineEntryMention {
   content: string | null
   created_at: string
   chapter_id: string | null
+  task_id: string
 }
 
 export function CharactersView({ adventure, characters }: CharactersViewProps) {
@@ -77,12 +78,12 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
 
       console.log("[v0] Fetching character mentions for character_id:", character.id)
 
-      // Get all timeline entries where this character was mentioned
       const { data: mentionsData, error: mentionsError } = await supabase
         .from("character_mentions")
         .select(
           `
           timeline_entry_id,
+          task_id,
           timeline_entries (
             id,
             title,
@@ -101,9 +102,16 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
 
       console.log("[v0] Character mentions found:", mentionsData?.length || 0)
 
-      // Extract timeline entries from the mentions
       const timelineEntries = (mentionsData || [])
-        .map((mention: any) => mention.timeline_entries)
+        .map((mention: any) => {
+          if (mention.timeline_entries) {
+            return {
+              ...mention.timeline_entries,
+              task_id: mention.task_id,
+            }
+          }
+          return null
+        })
         .filter((entry: any) => entry !== null) as TimelineEntryMention[]
 
       console.log("[v0] Timeline entries extracted:", timelineEntries.length)
@@ -332,7 +340,11 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
                   ) : mentions.length > 0 ? (
                     <div className="space-y-2 max-h-60 overflow-y-auto">
                       {mentions.map((entry) => (
-                        <Link key={entry.id} href={`/adventure/${adventure.id}/entry/${entry.id}`} className="block">
+                        <Link
+                          key={entry.id}
+                          href={`/adventure/${adventure.id}/entry/${entry.task_id}`}
+                          className="block"
+                        >
                           <Card className="bg-[#302831] border-[#EE9B3A]/30 hover:bg-[#302831]/90 transition-colors cursor-pointer">
                             <CardContent className="p-3">
                               <div className="flex items-start justify-between gap-2">

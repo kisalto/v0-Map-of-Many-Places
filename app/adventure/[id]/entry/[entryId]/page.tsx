@@ -335,12 +335,12 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
 
           <RichTextEditor value={content} onChange={setContent} adventureId={adventureId} />
 
-          <div className="text-sm text-[#9F8475] space-y-1 pt-4 border-t border-[#302831]">
-            <p>
-              <strong className="text-[#EE9B3A]">Dica:</strong> Use @ para mencionar personagens (ex: @Strahd) e # para
+          <div className="text-sm space-y-1 pt-4 border-t border-muted">
+            <p className="text-muted-foreground">
+              <strong className="text-primary">Dica:</strong> Use @ para mencionar personagens (ex: @Strahd) e # para
               mencionar regiões (ex: #Barovia)
             </p>
-            <p>As menções aparecerão destacadas no editor.</p>
+            <p className="text-muted-foreground">As menções aparecerão destacadas no editor.</p>
           </div>
         </div>
       </main>

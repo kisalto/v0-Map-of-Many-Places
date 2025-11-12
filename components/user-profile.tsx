@@ -3,9 +3,9 @@
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { User, LogOut } from "lucide-react"
+import { User, LogOut, Sun, Moon } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 interface UserProfileProps {
   profile: {
@@ -20,12 +20,30 @@ export function UserProfile({ profile }: UserProfileProps) {
   const router = useRouter()
   const supabase = createClient()
   const [isOpen, setIsOpen] = useState(false)
+  const [theme, setTheme] = useState<"dark" | "light">("dark")
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null
+    if (savedTheme) {
+      setTheme(savedTheme)
+      document.documentElement.classList.remove("dark", "light")
+      document.documentElement.classList.add(savedTheme)
+    }
+  }, [])
 
   const handleSignOut = async () => {
     console.log("[v0] Signing out user")
     await supabase.auth.signOut()
     router.push("/auth/login")
     router.refresh()
+  }
+
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark"
+    setTheme(newTheme)
+    localStorage.setItem("theme", newTheme)
+    document.documentElement.classList.remove("dark", "light")
+    document.documentElement.classList.add(newTheme)
   }
 
   if (!profile) return null
@@ -50,28 +68,47 @@ export function UserProfile({ profile }: UserProfileProps) {
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
 
           {/* Menu dropdown */}
-          <div className="absolute right-0 top-12 w-56 bg-[#0B0A13] border border-[#EE9B3A]/30 rounded-lg shadow-xl z-50 overflow-hidden">
-            <div className="p-3 border-b border-[#302831]">
-              <p className="text-sm font-medium text-[#E7D1B1]">{profile.display_name}</p>
-              <p className="text-xs text-[#9F8475]">@{profile.username}</p>
-              <p className="text-xs text-[#9F8475]">{profile.email}</p>
+          <div className="absolute right-0 top-12 w-56 bg-background border border-primary/30 rounded-lg shadow-xl z-50 overflow-hidden">
+            <div className="p-3 border-b border-muted">
+              <p className="text-sm font-medium text-foreground">{profile.display_name}</p>
+              <p className="text-xs text-muted-foreground">@{profile.username}</p>
+              <p className="text-xs text-muted-foreground">{profile.email}</p>
             </div>
 
             <button
-              className="w-full px-3 py-2 text-left text-sm text-[#E7D1B1] hover:bg-[#302831] flex items-center gap-2 transition-colors"
+              className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted flex items-center gap-2 transition-colors"
               onClick={() => {
                 setIsOpen(false)
                 router.push("/profile")
               }}
             >
-              <User className="h-4 w-4 text-[#EE9B3A]" />
+              <User className="h-4 w-4 text-primary" />
               <span>Ver Perfil</span>
             </button>
 
-            <div className="border-t border-[#302831]" />
+            <button
+              className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted flex items-center gap-2 transition-colors"
+              onClick={() => {
+                toggleTheme()
+              }}
+            >
+              {theme === "dark" ? (
+                <>
+                  <Sun className="h-4 w-4 text-primary" />
+                  <span>Tema Claro</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="h-4 w-4 text-primary" />
+                  <span>Tema Escuro</span>
+                </>
+              )}
+            </button>
+
+            <div className="border-t border-muted" />
 
             <button
-              className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-[#302831] flex items-center gap-2 transition-colors"
+              className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-muted flex items-center gap-2 transition-colors"
               onClick={() => {
                 setIsOpen(false)
                 handleSignOut()

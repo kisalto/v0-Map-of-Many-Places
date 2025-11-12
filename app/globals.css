@@ -4,19 +4,19 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Cores do novo design baseado nas imagens fornecidas */
+  /* Cores do tema escuro padrão - fantasia medieval */
   --background: #0b0a13; /* Fundo preto azulado escuro */
-  --foreground: #ffffff; /* Texto branco */
+  --foreground: #e7d1b1; /* Texto bege claro mais legível */
   --card: #0b0a13; /* Cards com fundo escuro */
-  --card-foreground: #ffffff; /* Texto branco nos cards */
+  --card-foreground: #e7d1b1; /* Texto bege claro nos cards */
   --popover: #0b0a13; /* Popups escuros */
-  --popover-foreground: #ffffff; /* Texto claro nos popups */
+  --popover-foreground: #e7d1b1; /* Texto claro nos popups */
   --primary: #ee9b3a; /* Laranja/dourado principal */
   --primary-foreground: #0b0a13; /* Texto escuro em botões primários */
   --secondary: #302831; /* Roxo escuro/preto */
-  --secondary-foreground: #ffffff; /* Texto claro secundário */
+  --secondary-foreground: #e7d1b1; /* Texto claro secundário */
   --muted: #302831; /* Esmaecido escuro */
-  --muted-foreground: #9f8475; /* Texto marrom claro esmaecido */
+  --muted-foreground: #c4a57b; /* Texto marrom mais claro para melhor contraste */
   --accent: #ee9b3a; /* Destaque laranja/dourado */
   --accent-foreground: #0b0a13; /* Texto escuro de destaque */
   --destructive: #dc2626; /* Vermelho para ações destrutivas */
@@ -34,6 +34,38 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+}
+
+/* Novo tema claro inspirado em pergaminhos antigos */
+.light {
+  --background: #f5ede1; /* Fundo creme de pergaminho */
+  --foreground: #2c1810; /* Texto marrom escuro quase preto */
+  --card: #faf6ef; /* Cards levemente mais claros */
+  --card-foreground: #2c1810; /* Texto marrom escuro nos cards */
+  --popover: #faf6ef; /* Popups claros */
+  --popover-foreground: #2c1810; /* Texto escuro nos popups */
+  --primary: #b8762e; /* Laranja/dourado queimado */
+  --primary-foreground: #faf6ef; /* Texto claro em botões primários */
+  --secondary: #d4c4b0; /* Bege médio */
+  --secondary-foreground: #2c1810; /* Texto escuro secundário */
+  --muted: #e5d9c9; /* Esmaecido claro */
+  --muted-foreground: #6b5544; /* Texto marrom médio */
+  --accent: #b8762e; /* Destaque dourado queimado */
+  --accent-foreground: #faf6ef; /* Texto claro de destaque */
+  --destructive: #b91c1c; /* Vermelho escuro */
+  --destructive-foreground: #fef2f2; /* Texto claro destrutivo */
+  --border: #b8762e; /* Bordas douradas queimadas */
+  --input: #faf6ef; /* Campos claros */
+  --ring: #b8762e; /* Anel dourado */
+  --npc-badge: #4d7c0f; /* Verde oliva escuro para NPCs */
+  --sidebar: #faf6ef;
+  --sidebar-foreground: #2c1810;
+  --sidebar-primary: #b8762e;
+  --sidebar-primary-foreground: #faf6ef;
+  --sidebar-accent: #e5d9c9;
+  --sidebar-accent-foreground: #2c1810;
+  --sidebar-border: #d4c4b0;
+  --sidebar-ring: #b8762e;
 }
 
 .dark {

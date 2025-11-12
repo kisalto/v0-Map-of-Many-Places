@@ -57,8 +57,8 @@ export function UserProfile({ profile }: UserProfileProps) {
         className="relative h-10 w-10 rounded-full p-0 hover:opacity-80 transition-opacity"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <Avatar className="h-10 w-10 bg-[#302831] border-2 border-[#EE9B3A]/30">
-          <AvatarFallback className="bg-[#302831] text-[#EE9B3A] font-semibold text-lg">{initial}</AvatarFallback>
+        <Avatar className="h-10 w-10 bg-card border-2 border-primary/30">
+          <AvatarFallback className="bg-card text-primary font-semibold text-lg">{initial}</AvatarFallback>
         </Avatar>
       </Button>
 

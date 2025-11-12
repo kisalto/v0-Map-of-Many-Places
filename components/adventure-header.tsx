@@ -109,27 +109,22 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
 
   return (
     <>
-      <header className="border-b border-[#EE9B3A]/30 bg-[#0B0A13]">
+      <header className="border-b border-[var(--color-header-border)]/30 bg-background">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-                className="text-[#E7D1B1] hover:text-[#EE9B3A] hover:bg-[#302831]"
-              >
+              <Button variant="ghost" size="sm" asChild className="text-foreground hover:text-primary hover:bg-muted">
                 <Link href="/dashboard">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Voltar
                 </Link>
               </Button>
 
-              <div className="h-6 w-px bg-[#302831]" />
+              <div className="h-6 w-px bg-border" />
 
-              <h1 className="text-xl font-serif font-bold text-[#E7D1B1]">{adventure.title}</h1>
+              <h1 className="text-xl font-serif font-bold text-foreground">{adventure.title}</h1>
 
-              <div className="h-6 w-px bg-[#302831]" />
+              <div className="h-6 w-px bg-border" />
 
               <nav className="flex items-center gap-1">
                 <Link href={`/adventure/${adventure.id}`}>
@@ -138,8 +133,8 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
                     size="sm"
                     className={`${
                       isTimelinePage
-                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none bg-transparent hover:bg-transparent"
-                        : "text-[#E7D1B1] hover:text-[#EE9B3A] hover:bg-[#302831]"
+                        ? "text-primary border-b-2 border-primary rounded-none bg-transparent hover:bg-transparent"
+                        : "text-foreground hover:text-primary hover:bg-muted"
                     }`}
                   >
                     Linha do Tempo
@@ -152,8 +147,8 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
                     size="sm"
                     className={`${
                       isCharactersPage
-                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none bg-transparent hover:bg-transparent"
-                        : "text-[#E7D1B1] hover:text-[#EE9B3A] hover:bg-[#302831]"
+                        ? "text-primary border-b-2 border-primary rounded-none bg-transparent hover:bg-transparent"
+                        : "text-foreground hover:text-primary hover:bg-muted"
                     }`}
                   >
                     Personagens
@@ -166,8 +161,8 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
                     size="sm"
                     className={`${
                       isRegionsPage
-                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none bg-transparent hover:bg-transparent"
-                        : "text-[#E7D1B1] hover:text-[#EE9B3A] hover:bg-[#302831]"
+                        ? "text-primary border-b-2 border-primary rounded-none bg-transparent hover:bg-transparent"
+                        : "text-foreground hover:text-primary hover:bg-muted"
                     }`}
                   >
                     Regiões
@@ -180,8 +175,8 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
                     size="sm"
                     className={`${
                       isSearchPage
-                        ? "text-[#EE9B3A] border-b-2 border-[#EE9B3A] rounded-none bg-transparent hover:bg-transparent"
-                        : "text-[#E7D1B1] hover:text-[#EE9B3A] hover:bg-[#302831]"
+                        ? "text-primary border-b-2 border-primary rounded-none bg-transparent hover:bg-transparent"
+                        : "text-foreground hover:text-primary hover:bg-muted"
                     }`}
                   >
                     Busca
@@ -192,11 +187,17 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
 
             <div className="flex items-center gap-3">
               {isActive ? (
-                <Badge variant="secondary" className="bg-[#84E557]/20 text-[#84E557] border-[#84E557]/30 font-serif">
+                <Badge
+                  variant="secondary"
+                  className="bg-[var(--color-success)]/20 text-[var(--color-success)] border-[var(--color-success)]/30 font-serif"
+                >
                   Ativo
                 </Badge>
               ) : (
-                <Badge variant="secondary" className="bg-red-500/20 text-red-400 border-red-500/30 font-serif">
+                <Badge
+                  variant="secondary"
+                  className="bg-destructive/20 text-destructive border-destructive/30 font-serif"
+                >
                   Desativado
                 </Badge>
               )}
@@ -205,7 +206,7 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
                 onClick={() => setShowSettings(true)}
                 variant="outline"
                 size="sm"
-                className="border-[#302831] text-[#E7D1B1] hover:bg-[#302831] bg-transparent"
+                className="border-border text-foreground hover:bg-muted bg-transparent"
               >
                 <Settings className="h-4 w-4 mr-2" />
                 Configurações
@@ -218,17 +219,17 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
       </header>
 
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="bg-[#302831] border-[#EE9B3A]/30">
+        <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-[#E7D1B1]">Configurações da Campanha</DialogTitle>
-            <DialogDescription className="text-[#9F8475]">
+            <DialogTitle className="text-card-foreground">Configurações da Campanha</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Gerencie os membros e configurações da sua campanha
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
             <div className="space-y-3">
-              <Label htmlFor="invite-email" className="text-[#E7D1B1]">
+              <Label htmlFor="invite-email" className="text-card-foreground">
                 Convidar Pessoa
               </Label>
               <div className="flex gap-2">
@@ -238,12 +239,12 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   placeholder="email@exemplo.com"
-                  className="bg-[#0B0A13] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475]"
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                 />
                 <Button
                   onClick={handleInvite}
                   disabled={isInviting || !inviteEmail.trim()}
-                  className="bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13]"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
                   Convidar
@@ -251,13 +252,13 @@ export function AdventureHeader({ adventure, profile }: AdventureHeaderProps) {
               </div>
             </div>
 
-            <div className="space-y-3 pt-4 border-t border-[#302831]">
-              <Label className="text-[#E7D1B1]">Zona de Perigo</Label>
+            <div className="space-y-3 pt-4 border-t border-border">
+              <Label className="text-card-foreground">Zona de Perigo</Label>
               <Button
                 onClick={() => setShowDeactivateConfirm(true)}
                 disabled={isDeactivating}
                 variant="outline"
-                className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10 bg-transparent"
+                className="w-full border-destructive/30 text-destructive hover:bg-destructive/10 bg-transparent"
               >
                 <Power className="h-4 w-4 mr-2" />
                 Desativar Campanha

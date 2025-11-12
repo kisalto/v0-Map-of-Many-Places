@@ -61,7 +61,7 @@ export default async function AdventurePage({ params }: AdventurePageProps) {
     .order("order_index", { ascending: true })
 
   return (
-    <div className="h-screen bg-[#0B0A13] flex flex-col">
+    <div className="h-screen bg-background flex flex-col">
       <AdventureHeader adventure={adventure} profile={profile} />
       <div className="flex-1 flex overflow-hidden">
         <TasksSidebar adventureId={id} tasks={sidebarTasks || []} />

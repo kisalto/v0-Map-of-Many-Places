@@ -27,7 +27,7 @@ export default async function RegionsPage({ params }: { params: Promise<{ id: st
     .order("created_at", { ascending: false })
 
   return (
-    <div className="min-h-screen bg-[#0B0A13]">
+    <div className="min-h-screen bg-background">
       <AdventureHeader adventure={adventure} profile={profile} />
       <RegionsView adventure={adventure} regions={regions || []} />
     </div>

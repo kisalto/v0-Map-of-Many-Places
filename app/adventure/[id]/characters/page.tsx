@@ -27,7 +27,7 @@ export default async function CharactersPage({ params }: { params: Promise<{ id:
     .order("created_at", { ascending: false })
 
   return (
-    <div className="min-h-screen bg-[#0B0A13]">
+    <div className="min-h-screen bg-background">
       <AdventureHeader adventure={adventure} profile={profile} />
       <CharactersView adventure={adventure} characters={characters || []} />
     </div>

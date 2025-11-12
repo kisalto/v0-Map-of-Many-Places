@@ -167,7 +167,7 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
         <div className="flex gap-4 h-full">
           {chapters.map((chapter) => (
             <div key={chapter.id} className="flex-shrink-0 w-80">
-              <Card className="bg-[#302831] border-[#EE9B3A]/30 h-full flex flex-col">
+              <Card className="bg-[var(--color-chapter-card)] border-[var(--color-header-border)]/30 h-full flex flex-col">
                 <CardContent className="p-4 flex flex-col h-full">
                   <div className="flex items-center justify-between mb-4 gap-2">
                     {editingChapterId === chapter.id ? (
@@ -183,10 +183,10 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
                         }}
                         onBlur={() => handleEditChapter(chapter.id)}
                         autoFocus
-                        className="bg-[#0B0A13] border-[#EE9B3A] text-[#E7D1B1] text-center"
+                        className="bg-background border-primary text-foreground text-center"
                       />
                     ) : (
-                      <h3 className="font-semibold text-[#EE9B3A] text-lg flex-1 text-center">{chapter.title}</h3>
+                      <h3 className="font-semibold text-primary text-lg flex-1 text-center">{chapter.title}</h3>
                     )}
 
                     <DropdownMenu modal={false}>
@@ -194,7 +194,7 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-9 w-9 p-0 text-[#E7D1B1] hover:bg-[#EE9B3A]/30 hover:text-[#EE9B3A] flex-shrink-0 transition-all"
+                          className="h-9 w-9 p-0 text-foreground hover:bg-primary/30 hover:text-primary flex-shrink-0 transition-all"
                           onClick={(e) => {
                             console.log("[v0] Dropdown menu button clicked for chapter:", chapter.id)
                             console.log("[v0] Button element:", e.currentTarget)
@@ -204,7 +204,7 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
-                        className="bg-[#0B0A13] border-[#302831] z-[100]"
+                        className="bg-background border-border z-[100]"
                         align="end"
                         sideOffset={8}
                         onOpenAutoFocus={(e) => {
@@ -217,7 +217,7 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
                             setEditingChapterId(chapter.id)
                             setEditingChapterTitle(chapter.title)
                           }}
-                          className="text-[#E7D1B1] hover:bg-[#302831] cursor-pointer focus:bg-[#302831] focus:text-[#EE9B3A]"
+                          className="text-foreground hover:bg-muted cursor-pointer focus:bg-muted focus:text-primary"
                         >
                           <Pencil className="h-4 w-4 mr-2" />
                           Editar
@@ -227,7 +227,7 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
                             console.log("[v0] Delete chapter clicked:", chapter.id)
                             setConfirmDeleteChapterId(chapter.id)
                           }}
-                          className="text-red-400 hover:bg-[#302831] cursor-pointer focus:bg-[#302831] focus:text-red-300"
+                          className="text-destructive hover:bg-muted cursor-pointer focus:bg-muted focus:text-destructive"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Deletar Capítulo e Anotações
@@ -241,11 +241,11 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
                       .filter((entry) => entry.chapter_id === chapter.id)
                       .map((entry) => (
                         <Link key={entry.id} href={`/adventure/${adventureId}/entry/${entry.id}`}>
-                          <Card className="bg-[#0B0A13] border-[#302831] hover:border-[#EE9B3A]/50 cursor-pointer transition-colors">
+                          <Card className="bg-[var(--color-entry-card)] border-border hover:border-primary/50 cursor-pointer transition-colors">
                             <CardContent className="p-3 text-center">
-                              <p className="text-sm text-[#E7D1B1] font-medium">{entry.title}</p>
+                              <p className="text-sm text-foreground font-medium">{entry.title}</p>
                               {entry.description && (
-                                <p className="text-xs text-[#9F8475] mt-1 line-clamp-2">{entry.description}</p>
+                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{entry.description}</p>
                               )}
                             </CardContent>
                           </Card>
@@ -264,7 +264,7 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
                           asChild
                           variant="outline"
                           size="sm"
-                          className="w-full border-[#EE9B3A]/30 text-[#EE9B3A] hover:bg-[#EE9B3A]/10 bg-transparent"
+                          className="w-full border-primary/30 text-primary hover:bg-primary/10 bg-transparent"
                         >
                           <Link href={`/adventure/${adventureId}/entry/new?chapter=${chapter.id}`}>
                             <Plus className="h-4 w-4 mr-2" />
@@ -276,7 +276,7 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
                           onClick={() => setConfirmCompleteChapterId(chapter.id)}
                           variant="outline"
                           size="sm"
-                          className="w-full border-[#302831] text-[#9F8475] hover:bg-[#302831]"
+                          className="w-full border-border text-muted-foreground hover:bg-muted"
                         >
                           FIM
                         </Button>
@@ -286,7 +286,7 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
                         onClick={() => setConfirmReopenChapterId(chapter.id)}
                         variant="outline"
                         size="sm"
-                        className="w-full border-[#EE9B3A]/30 text-[#EE9B3A] hover:bg-[#EE9B3A]/10 bg-transparent"
+                        className="w-full border-primary/30 text-primary hover:bg-primary/10 bg-transparent"
                       >
                         <AlertCircle className="h-4 w-4 mr-2" />
                         Reabrir Capítulo
@@ -299,20 +299,20 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
           ))}
 
           <div className="flex-shrink-0 w-80">
-            <Card className="bg-[#302831]/50 border-[#EE9B3A]/30 border-dashed">
+            <Card className="bg-card/50 border-primary/30 border-dashed">
               <CardContent className="p-4">
                 <Input
                   value={newChapterTitle}
                   onChange={(e) => setNewChapterTitle(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAddChapter()}
                   placeholder="Novo capítulo..."
-                  className="bg-[#0B0A13] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475] mb-2"
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground mb-2"
                 />
                 <Button
                   onClick={handleAddChapter}
                   disabled={!newChapterTitle.trim()}
                   size="sm"
-                  className="w-full bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13]"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Adicionar Capítulo
@@ -324,21 +324,21 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
       </div>
 
       <AlertDialog open={!!confirmCompleteChapterId} onOpenChange={() => setConfirmCompleteChapterId(null)}>
-        <AlertDialogContent className="bg-[#302831] border-[#EE9B3A]/30">
+        <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-[#E7D1B1]">Finalizar Capítulo?</AlertDialogTitle>
-            <AlertDialogDescription className="text-[#9F8475]">
+            <AlertDialogTitle className="text-card-foreground">Finalizar Capítulo?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
               Ao marcar este capítulo como finalizado, você não poderá adicionar mais anotações. Você pode reabrir o
               capítulo depois se necessário.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-transparent border-[#302831] text-[#E7D1B1] hover:bg-[#302831]">
+            <AlertDialogCancel className="bg-transparent border-border text-foreground hover:bg-muted">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => confirmCompleteChapterId && handleMarkChapterComplete(confirmCompleteChapterId)}
-              className="bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13]"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               Finalizar
             </AlertDialogAction>
@@ -347,20 +347,20 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
       </AlertDialog>
 
       <AlertDialog open={!!confirmReopenChapterId} onOpenChange={() => setConfirmReopenChapterId(null)}>
-        <AlertDialogContent className="bg-[#302831] border-[#EE9B3A]/30">
+        <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-[#E7D1B1]">Reabrir Capítulo?</AlertDialogTitle>
-            <AlertDialogDescription className="text-[#9F8475]">
+            <AlertDialogTitle className="text-card-foreground">Reabrir Capítulo?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
               Ao reabrir este capítulo, você poderá adicionar novas anotações novamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-transparent border-[#302831] text-[#E7D1B1] hover:bg-[#302831]">
+            <AlertDialogCancel className="bg-transparent border-border text-foreground hover:bg-muted">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => confirmReopenChapterId && handleReopenChapter(confirmReopenChapterId)}
-              className="bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13]"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               Reabrir
             </AlertDialogAction>
@@ -369,21 +369,21 @@ export function TrelloBoard({ adventureId, chapters: initialChapters, entries: i
       </AlertDialog>
 
       <AlertDialog open={!!confirmDeleteChapterId} onOpenChange={() => setConfirmDeleteChapterId(null)}>
-        <AlertDialogContent className="bg-[#302831] border-[#EE9B3A]/30">
+        <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-[#E7D1B1]">Deletar Capítulo?</AlertDialogTitle>
-            <AlertDialogDescription className="text-[#9F8475]">
+            <AlertDialogTitle className="text-card-foreground">Deletar Capítulo?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
               Esta ação não pode ser desfeita. Isso vai deletar permanentemente o capítulo e todas as anotações dentro
               dele.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-transparent border-[#302831] text-[#E7D1B1] hover:bg-[#302831]">
+            <AlertDialogCancel className="bg-transparent border-border text-foreground hover:bg-muted">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => confirmDeleteChapterId && handleDeleteChapter(confirmDeleteChapterId)}
-              className="bg-red-500 hover:bg-red-600 text-white"
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
             >
               Deletar
             </AlertDialogAction>

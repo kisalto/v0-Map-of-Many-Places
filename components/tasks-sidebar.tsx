@@ -96,21 +96,24 @@ export function TasksSidebar({ adventureId, tasks: initialTasks }: TasksSidebarP
   }
 
   return (
-    <aside className="w-64 bg-[#0B0A13] border-r border-[#302831] flex flex-col">
-      <div className="p-4 border-b border-[#302831]">
-        <h2 className="font-semibold text-[#E7D1B1] text-lg">A fazeres</h2>
+    <aside className="w-64 bg-[var(--color-sidebar-bg)] border-r border-[var(--color-sidebar-border)] flex flex-col">
+      <div className="p-4 border-b border-border">
+        <h2 className="font-semibold text-foreground text-lg">A fazeres</h2>
       </div>
 
       <div className="flex-1 overflow-auto p-4 space-y-2">
         {tasks.map((task) => (
-          <div key={task.id} className="flex items-start gap-2 p-3 rounded-lg bg-[#302831] hover:bg-[#302831]/80 group">
+          <div
+            key={task.id}
+            className="flex items-start gap-2 p-3 rounded-lg bg-[var(--color-task-bg)] hover:bg-[var(--color-task-hover)] group"
+          >
             <Checkbox
               checked={task.completed}
               onCheckedChange={(checked) => handleToggleTask(task.id, checked as boolean)}
               className="mt-0.5"
             />
             <div className="flex-1 min-w-0">
-              <p className={`text-sm text-[#E7D1B1] ${task.completed ? "line-through opacity-60" : ""}`}>
+              <p className={`text-sm text-foreground ${task.completed ? "line-through opacity-60" : ""}`}>
                 {task.title}
               </p>
             </div>
@@ -121,7 +124,7 @@ export function TasksSidebar({ adventureId, tasks: initialTasks }: TasksSidebarP
                 console.log("[v0] Delete task button clicked:", task.id)
                 handleDeleteTask(task.id)
               }}
-              className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0 text-red-400 hover:text-red-300 hover:bg-red-400/10 flex-shrink-0"
+              className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -129,20 +132,20 @@ export function TasksSidebar({ adventureId, tasks: initialTasks }: TasksSidebarP
         ))}
       </div>
 
-      <div className="p-4 border-t border-[#302831]">
+      <div className="p-4 border-t border-border">
         <div className="flex gap-2">
           <Input
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAddTask()}
             placeholder="Nova tarefa..."
-            className="bg-[#302831] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475]"
+            className="bg-input border-border text-foreground placeholder:text-muted-foreground"
           />
           <Button
             onClick={handleAddTask}
             disabled={isAdding || !newTaskTitle.trim()}
             size="sm"
-            className="bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13]"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             <Plus className="h-4 w-4" />
           </Button>

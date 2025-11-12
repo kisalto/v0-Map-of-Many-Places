@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client"
 import { ArrowLeft, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { RichTextEditor } from "@/components/rich-text-editor"
+import { WysiwygEditor } from "@/components/wysiwyg-editor"
 import { ConfirmationDialog } from "@/components/confirmation-dialog"
 
 export default function NewEntryPage({ params }: { params: { id: string } }) {
@@ -386,8 +386,8 @@ export default function NewEntryPage({ params }: { params: { id: string } }) {
             className="text-3xl font-serif border-none bg-transparent text-[#E7D1B1] placeholder:text-[#302831] focus-visible:ring-0 px-0"
           />
 
-          {/* Rich Text Editor */}
-          <RichTextEditor
+          {/* WYSIWYG Editor */}
+          <WysiwygEditor
             value={content}
             onChange={(newContent) => {
               console.log("[v0] Content changed, new length:", newContent.length)

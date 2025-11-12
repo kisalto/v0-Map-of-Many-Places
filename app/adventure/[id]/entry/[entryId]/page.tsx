@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client"
 import { ArrowLeft, Save, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { RichTextEditor } from "@/components/rich-text-editor"
+import { WysiwygEditor } from "@/components/wysiwyg-editor"
 import { ConfirmationDialog } from "@/components/confirmation-dialog"
 
 export default function EditEntryPage({ params }: { params: { id: string; entryId: string } }) {
@@ -333,7 +333,7 @@ export default function EditEntryPage({ params }: { params: { id: string; entryI
             className="text-3xl font-serif border-none bg-transparent text-[#E7D1B1] placeholder:text-[#302831] focus-visible:ring-0 px-0"
           />
 
-          <RichTextEditor value={content} onChange={setContent} adventureId={adventureId} />
+          <WysiwygEditor value={content} onChange={setContent} adventureId={adventureId} />
 
           <div className="text-sm space-y-1 pt-4 border-t border-muted">
             <p className="text-muted-foreground">

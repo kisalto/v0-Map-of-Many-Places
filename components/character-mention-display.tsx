@@ -7,13 +7,14 @@ import { createClient } from "@/lib/supabase/client"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Crown, Sword } from "lucide-react"
+import { Crown, Sword, Users, Swords, Ban } from "lucide-react"
 import { CharacterDetailDialog } from "@/components/character-detail-dialog"
 
 interface Character {
   id: string
   name: string
   type: "npc" | "player"
+  character_category?: "ally" | "enemy" | "neutral"
   status: string
   description?: string
   notes?: string
@@ -29,6 +30,21 @@ interface CharacterMentionDisplayProps {
   className?: string
 }
 
+const getCharacterColor = (type: "npc" | "player", category?: "ally" | "enemy" | "neutral") => {
+  if (type === "player") return "var(--player-color)"
+  if (category === "ally") return "var(--ally-color)"
+  if (category === "enemy") return "var(--enemy-color)"
+  return "var(--neutral-color)"
+}
+
+const getCharacterIcon = (type: "npc" | "player", category?: "ally" | "enemy" | "neutral") => {
+  if (type === "player") return <Sword className="h-3 w-3" />
+  if (category === "ally") return <Users className="h-3 w-3" />
+  if (category === "enemy") return <Swords className="h-3 w-3" />
+  if (category === "neutral") return <Ban className="h-3 w-3" />
+  return <Crown className="h-3 w-3" />
+}
+
 export function CharacterMentionDisplay({ text, adventureId, className }: CharacterMentionDisplayProps) {
   const [characters, setCharacters] = useState<Character[]>([])
   const [hoveredCharacter, setHoveredCharacter] = useState<Character | null>(null)
@@ -39,16 +55,16 @@ export function CharacterMentionDisplay({ text, adventureId, className }: Charac
     const loadCharacters = async () => {
       const supabase = createClient()
 
-      // Load NPCs
       const { data: npcs } = await supabase
         .from("npcs")
-        .select("id, name, status, description, notes, created_at")
+        .select("id, name, status, character_category, description, notes, created_at")
         .eq("adventure_id", adventureId)
 
-      // Load Players
       const { data: players } = await supabase
         .from("adventure_players")
-        .select("id, character_name, status, description, notes, created_at, profiles(display_name)")
+        .select(
+          "id, character_name, status, character_category, description, notes, created_at, profiles(display_name)",
+        )
         .eq("adventure_id", adventureId)
 
       const allCharacters: Character[] = [
@@ -56,6 +72,7 @@ export function CharacterMentionDisplay({ text, adventureId, className }: Charac
           id: npc.id,
           name: npc.name,
           type: "npc" as const,
+          character_category: npc.character_category as "ally" | "enemy" | "neutral" | undefined,
           status: npc.status,
           description: npc.description,
           notes: npc.notes,
@@ -65,6 +82,7 @@ export function CharacterMentionDisplay({ text, adventureId, className }: Charac
           id: player.id,
           name: player.character_name,
           type: "player" as const,
+          character_category: player.character_category as "ally" | "enemy" | "neutral" | undefined,
           status: player.status,
           description: player.description,
           notes: player.notes,
@@ -143,22 +161,22 @@ export function CharacterMentionDisplay({ text, adventureId, className }: Charac
       <div className={className}>
         {parts.map((part, index) => {
           if (part.type === "mention" && part.character) {
+            const color = getCharacterColor(part.character.type, part.character.character_category)
+            const icon = getCharacterIcon(part.character.type, part.character.character_category)
+
             return (
               <CharacterDetailDialog key={index} character={part.character} type={part.character.type}>
                 <span
-                  className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs cursor-pointer transition-colors ${
-                    part.character.type === "npc"
-                      ? "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/30"
-                      : "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/30"
-                  }`}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs cursor-pointer transition-all hover:scale-105 font-medium border"
+                  style={{
+                    backgroundColor: `color-mix(in srgb, ${color} 20%, transparent)`,
+                    color: color,
+                    borderColor: `color-mix(in srgb, ${color} 30%, transparent)`,
+                  }}
                   onMouseEnter={(e) => handleMentionHover(part.character!, e)}
                   onMouseLeave={handleMentionLeave}
                 >
-                  {part.character.type === "npc" ? (
-                    <Crown className="h-2.5 w-2.5" />
-                  ) : (
-                    <Sword className="h-2.5 w-2.5" />
-                  )}
+                  {icon}
                   {part.content}
                 </span>
               </CharacterDetailDialog>
@@ -177,39 +195,39 @@ export function CharacterMentionDisplay({ text, adventureId, className }: Charac
             top: hoverPosition.y - 10,
           }}
         >
-          <Card className="bg-slate-800 border-slate-700 shadow-xl w-64">
+          <Card className="bg-card border-primary/30 shadow-xl w-64">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
-                <Avatar className="h-10 w-10 bg-slate-600">
-                  <AvatarFallback className="bg-slate-600 text-slate-300">
+                <Avatar className="h-10 w-10 bg-muted">
+                  <AvatarFallback className="bg-muted text-muted-foreground">
                     {hoveredCharacter.name.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
-                    <h4 className="font-medium text-white text-sm">{hoveredCharacter.name}</h4>
+                    <h4 className="font-medium text-foreground text-sm">{hoveredCharacter.name}</h4>
                     <div className="flex items-center gap-1">
-                      {hoveredCharacter.type === "npc" ? (
-                        <Crown className="h-3 w-3 text-amber-400" />
-                      ) : (
-                        <Sword className="h-3 w-3 text-emerald-400" />
-                      )}
+                      {getCharacterIcon(hoveredCharacter.type, hoveredCharacter.character_category)}
                       <Badge
                         variant="secondary"
-                        className={`text-xs ${
-                          hoveredCharacter.status === "alive" || hoveredCharacter.status === "active"
-                            ? "bg-emerald-500/20 text-emerald-400"
-                            : hoveredCharacter.status === "dead"
-                              ? "bg-red-500/20 text-red-400"
-                              : "bg-slate-500/20 text-slate-400"
-                        }`}
+                        className="text-xs"
+                        style={{
+                          backgroundColor: `color-mix(in srgb, ${getCharacterColor(hoveredCharacter.type, hoveredCharacter.character_category)} 20%, transparent)`,
+                          color: getCharacterColor(hoveredCharacter.type, hoveredCharacter.character_category),
+                        }}
                       >
-                        {hoveredCharacter.type === "npc" ? "NPC" : "Jogador"}
+                        {hoveredCharacter.type === "player"
+                          ? "Jogador"
+                          : hoveredCharacter.character_category === "ally"
+                            ? "Aliado"
+                            : hoveredCharacter.character_category === "enemy"
+                              ? "Inimigo"
+                              : "Neutral"}
                       </Badge>
                     </div>
                   </div>
                   {hoveredCharacter.description && (
-                    <p className="text-xs text-slate-400 line-clamp-3">{hoveredCharacter.description}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-3">{hoveredCharacter.description}</p>
                   )}
                 </div>
               </div>

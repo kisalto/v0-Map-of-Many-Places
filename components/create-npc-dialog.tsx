@@ -31,6 +31,7 @@ export function CreateNPCDialog({ adventureId, children }: CreateNPCDialogProps)
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [status, setStatus] = useState<"alive" | "dead" | "unknown">("alive")
+  const [characterCategory, setCharacterCategory] = useState<"ally" | "enemy" | "neutral">("neutral")
   const [notes, setNotes] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -46,25 +47,24 @@ export function CreateNPCDialog({ adventureId, children }: CreateNPCDialogProps)
     try {
       const supabase = createClient()
 
-      // Create NPC
       const { error } = await supabase.from("npcs").insert({
         adventure_id: adventureId,
         name: name.trim(),
         description: description.trim() || null,
         status,
+        character_category: characterCategory,
         notes: notes.trim() || null,
       })
 
       if (error) throw error
 
-      // Reset form and close dialog
       setName("")
       setDescription("")
       setStatus("alive")
+      setCharacterCategory("neutral")
       setNotes("")
       setOpen(false)
 
-      // Refresh the page to show new NPC
       router.refresh()
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Erro ao criar NPC")
@@ -76,76 +76,99 @@ export function CreateNPCDialog({ adventureId, children }: CreateNPCDialogProps)
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-md">
+      <DialogContent className="bg-card border-primary/30 text-foreground max-w-md">
         <DialogHeader>
           <DialogTitle>Novo NPC</DialogTitle>
-          <DialogDescription className="text-slate-300">
+          <DialogDescription className="text-muted-foreground">
             Adicione um novo personagem não-jogador à aventura.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="name" className="text-slate-200">
-                Nome do NPC
-              </Label>
+              <Label htmlFor="name">Nome do NPC</Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ex: Gandalf, o Cinzento"
-                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                className="bg-input border-primary/30 text-foreground placeholder:text-muted-foreground"
                 required
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description" className="text-slate-200">
-                Descrição
-              </Label>
+              <Label htmlFor="description">Descrição</Label>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Descreva a aparência e personalidade do NPC..."
-                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 min-h-[80px]"
+                className="bg-input border-primary/30 text-foreground placeholder:text-muted-foreground min-h-[80px]"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="status" className="text-slate-200">
-                Status
-              </Label>
-              <Select value={status} onValueChange={(value: "alive" | "dead" | "unknown") => setStatus(value)}>
-                <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
+              <Label htmlFor="characterCategory">Categoria</Label>
+              <Select
+                value={characterCategory}
+                onValueChange={(value: "ally" | "enemy" | "neutral") => setCharacterCategory(value)}
+              >
+                <SelectTrigger className="bg-input border-primary/30 text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
-                  <SelectItem value="alive" className="text-white hover:bg-slate-700">
+                <SelectContent className="bg-card border-primary/30">
+                  <SelectItem value="ally" className="text-foreground hover:bg-muted">
+                    <span className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-[var(--ally-color)]"></span>
+                      Aliado
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="enemy" className="text-foreground hover:bg-muted">
+                    <span className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-[var(--enemy-color)]"></span>
+                      Inimigo
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="neutral" className="text-foreground hover:bg-muted">
+                    <span className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-[var(--neutral-color)]"></span>
+                      Neutral
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="status">Status</Label>
+              <Select value={status} onValueChange={(value: "alive" | "dead" | "unknown") => setStatus(value)}>
+                <SelectTrigger className="bg-input border-primary/30 text-foreground">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-primary/30">
+                  <SelectItem value="alive" className="text-foreground hover:bg-muted">
                     Vivo
                   </SelectItem>
-                  <SelectItem value="dead" className="text-white hover:bg-slate-700">
+                  <SelectItem value="dead" className="text-foreground hover:bg-muted">
                     Morto
                   </SelectItem>
-                  <SelectItem value="unknown" className="text-white hover:bg-slate-700">
+                  <SelectItem value="unknown" className="text-foreground hover:bg-muted">
                     Desconhecido
                   </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="notes" className="text-slate-200">
-                Anotações (opcional)
-              </Label>
+              <Label htmlFor="notes">Anotações (opcional)</Label>
               <Textarea
                 id="notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Anotações importantes sobre o NPC..."
-                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 min-h-[60px]"
+                className="bg-input border-primary/30 text-foreground placeholder:text-muted-foreground min-h-[60px]"
               />
             </div>
             {error && (
-              <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-md">
-                <p className="text-sm text-red-300">{error}</p>
+              <div className="p-3 bg-destructive/20 border border-destructive/30 rounded-md">
+                <p className="text-sm text-destructive-foreground">{error}</p>
               </div>
             )}
           </div>
@@ -154,14 +177,14 @@ export function CreateNPCDialog({ adventureId, children }: CreateNPCDialogProps)
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="border-slate-600 text-slate-300 hover:bg-slate-700"
+              className="border-primary/30 text-muted-foreground hover:bg-muted"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={isLoading || !name.trim()}
-              className="bg-amber-600 hover:bg-amber-700 text-white"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Criar NPC

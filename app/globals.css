@@ -34,6 +34,17 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Character type colors for tagging system - dark theme */
+  --player-color: #22c55e;
+  --ally-color: #3b82f6;
+  --enemy-color: #ef4444;
+  --neutral-color: #6b7280;
+  --region-color: #a855f7;
+  --subregion-color: #ec4899;
+
+  /* Text cursor color for dark mode */
+  --cursor-color: #ee9b3a;
 }
 
 /* Novo tema claro inspirado em pergaminhos antigos */
@@ -66,6 +77,17 @@
   --sidebar-accent-foreground: #2c1810;
   --sidebar-border: #d4c4b0;
   --sidebar-ring: #b8762e;
+
+  /* Character type colors for light theme */
+  --player-color: #16a34a;
+  --ally-color: #2563eb;
+  --enemy-color: #dc2626;
+  --neutral-color: #4b5563;
+  --region-color: #9333ea;
+  --subregion-color: #db2777;
+
+  /* Text cursor color for light mode */
+  --cursor-color: #b8762e;
 }
 
 .dark {
@@ -133,6 +155,17 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* Custom cursor color for text inputs and textareas */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+textarea,
+[contenteditable="true"],
+.tiptap {
+  caret-color: var(--cursor-color);
 }
 
 @layer base {

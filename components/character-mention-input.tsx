@@ -8,12 +8,13 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Crown, Sword } from "lucide-react"
+import { Crown, Sword, Users, Swords, Ban } from "lucide-react"
 
 interface Character {
   id: string
   name: string
   type: "npc" | "player"
+  character_category?: "ally" | "enemy" | "neutral"
   status: string
 }
 
@@ -23,6 +24,21 @@ interface CharacterMentionInputProps {
   adventureId: string
   placeholder?: string
   className?: string
+}
+
+const getCharacterColor = (type: "npc" | "player", category?: "ally" | "enemy" | "neutral") => {
+  if (type === "player") return "var(--player-color)"
+  if (category === "ally") return "var(--ally-color)"
+  if (category === "enemy") return "var(--enemy-color)"
+  return "var(--neutral-color)"
+}
+
+const getCharacterIcon = (type: "npc" | "player", category?: "ally" | "enemy" | "neutral") => {
+  if (type === "player") return <Sword className="h-3 w-3" />
+  if (category === "ally") return <Users className="h-3 w-3" />
+  if (category === "enemy") return <Swords className="h-3 w-3" />
+  if (category === "neutral") return <Ban className="h-3 w-3" />
+  return <Crown className="h-3 w-3" />
 }
 
 export function CharacterMentionInput({
@@ -42,16 +58,12 @@ export function CharacterMentionInput({
 
   // Load characters when component mounts
   useEffect(() => {
-    console.log("[v0] CharacterMentionInput: Component mounted")
-    console.log("[v0] CharacterMentionInput: Adventure ID:", adventureId)
-
     const loadCharacters = async () => {
-      console.log("[v0] CharacterMentionInput: Loading characters...")
       const supabase = createClient()
 
       const { data: allChars, error } = await supabase
         .from("characters")
-        .select("id, name, character_type")
+        .select("id, name, character_type, character_category")
         .eq("adventure_id", adventureId)
 
       if (error) {
@@ -59,17 +71,14 @@ export function CharacterMentionInput({
         return
       }
 
-      console.log("[v0] CharacterMentionInput: Characters loaded:", allChars?.length || 0)
-      console.log("[v0] CharacterMentionInput: Character details:", allChars)
-
       const allCharacters: Character[] = (allChars || []).map((char) => ({
         id: char.id,
         name: char.name,
         type: char.character_type as "npc" | "player",
+        character_category: char.character_category as "ally" | "enemy" | "neutral" | undefined,
         status: "active",
       }))
 
-      console.log("[v0] CharacterMentionInput: Processed characters:", allCharacters)
       setCharacters(allCharacters)
     }
 
@@ -81,24 +90,15 @@ export function CharacterMentionInput({
     const newValue = e.target.value
     const cursorPosition = e.target.selectionStart
 
-    console.log("[v0] CharacterMentionInput: Text changed")
-    console.log("[v0] CharacterMentionInput: New value length:", newValue.length)
-    console.log("[v0] CharacterMentionInput: Cursor position:", cursorPosition)
-
     onChange(newValue)
 
     // Check for @ mention
     const textBeforeCursor = newValue.slice(0, cursorPosition)
     const lastAtIndex = textBeforeCursor.lastIndexOf("@")
 
-    console.log("[v0] CharacterMentionInput: Last @ index:", lastAtIndex)
-
     if (lastAtIndex !== -1) {
       const textAfterAt = textBeforeCursor.slice(lastAtIndex + 1)
       const hasSpaceAfterAt = textAfterAt.includes(" ")
-
-      console.log("[v0] CharacterMentionInput: Text after @:", textAfterAt)
-      console.log("[v0] CharacterMentionInput: Has space after @:", hasSpaceAfterAt)
 
       if (!hasSpaceAfterAt) {
         setMentionStart(lastAtIndex)
@@ -107,24 +107,13 @@ export function CharacterMentionInput({
         // Filter characters based on query
         const filtered = characters.filter((char) => char.name.toLowerCase().includes(textAfterAt.toLowerCase()))
 
-        console.log("[v0] CharacterMentionInput: Query:", textAfterAt)
-        console.log("[v0] CharacterMentionInput: Filtered characters:", filtered.length)
-        console.log(
-          "[v0] CharacterMentionInput: Filtered character names:",
-          filtered.map((c) => c.name),
-        )
-
         setSuggestions(filtered)
         setShowSuggestions(filtered.length > 0)
         setSelectedIndex(0)
-
-        console.log("[v0] CharacterMentionInput: Show suggestions:", filtered.length > 0)
       } else {
-        console.log("[v0] CharacterMentionInput: Hiding suggestions (space after @)")
         setShowSuggestions(false)
       }
     } else {
-      console.log("[v0] CharacterMentionInput: No @ found, hiding suggestions")
       setShowSuggestions(false)
     }
   }
@@ -133,35 +122,23 @@ export function CharacterMentionInput({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!showSuggestions) return
 
-    console.log("[v0] CharacterMentionInput: Key pressed:", e.key)
-
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault()
-        setSelectedIndex((prev) => {
-          const newIndex = (prev + 1) % suggestions.length
-          console.log("[v0] CharacterMentionInput: Selected index (down):", newIndex)
-          return newIndex
-        })
+        setSelectedIndex((prev) => (prev + 1) % suggestions.length)
         break
       case "ArrowUp":
         e.preventDefault()
-        setSelectedIndex((prev) => {
-          const newIndex = (prev - 1 + suggestions.length) % suggestions.length
-          console.log("[v0] CharacterMentionInput: Selected index (up):", newIndex)
-          return newIndex
-        })
+        setSelectedIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length)
         break
       case "Enter":
       case "Tab":
         e.preventDefault()
         if (suggestions[selectedIndex]) {
-          console.log("[v0] CharacterMentionInput: Inserting mention:", suggestions[selectedIndex].name)
           insertMention(suggestions[selectedIndex])
         }
         break
       case "Escape":
-        console.log("[v0] CharacterMentionInput: Escape pressed, hiding suggestions")
         setShowSuggestions(false)
         break
     }
@@ -169,17 +146,9 @@ export function CharacterMentionInput({
 
   // Insert mention into text
   const insertMention = (character: Character) => {
-    console.log("[v0] CharacterMentionInput: Inserting mention for:", character.name)
-    console.log("[v0] CharacterMentionInput: Mention start position:", mentionStart)
-    console.log("[v0] CharacterMentionInput: Current query:", mentionQuery)
-
     const beforeMention = value.slice(0, mentionStart)
     const afterMention = value.slice(mentionStart + mentionQuery.length + 1)
     const newValue = `${beforeMention}@${character.name} ${afterMention}`
-
-    console.log("[v0] CharacterMentionInput: New value:", newValue)
-    console.log("[v0] CharacterMentionInput: Before mention:", beforeMention)
-    console.log("[v0] CharacterMentionInput: After mention:", afterMention)
 
     onChange(newValue)
     setShowSuggestions(false)
@@ -188,7 +157,6 @@ export function CharacterMentionInput({
     setTimeout(() => {
       if (textareaRef.current) {
         const newCursorPosition = mentionStart + character.name.length + 2
-        console.log("[v0] CharacterMentionInput: Setting cursor position:", newCursorPosition)
         textareaRef.current.focus()
         textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition)
       }
@@ -208,54 +176,58 @@ export function CharacterMentionInput({
 
       {/* Suggestions dropdown */}
       {showSuggestions && suggestions.length > 0 && (
-        <Card className="absolute z-50 mt-1 w-full bg-slate-800 border-slate-700 shadow-lg">
+        <Card className="absolute z-50 mt-1 w-full bg-card border-primary/30 shadow-lg">
           <CardContent className="p-2">
             <div className="space-y-1">
-              {suggestions.map((character, index) => (
-                <div
-                  key={character.id}
-                  className={`flex items-center gap-3 p-2 rounded cursor-pointer transition-colors ${
-                    index === selectedIndex ? "bg-slate-700" : "hover:bg-slate-700/50"
-                  }`}
-                  onClick={() => {
-                    console.log("[v0] CharacterMentionInput: Suggestion clicked:", character.name)
-                    insertMention(character)
-                  }}
-                >
-                  <Avatar className="h-6 w-6 bg-slate-600">
-                    <AvatarFallback className="bg-slate-600 text-slate-300 text-xs">
-                      {character.name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-white truncate">{character.name}</span>
-                      <div className="flex items-center gap-1">
-                        {character.type === "npc" ? (
-                          <Crown className="h-3 w-3 text-amber-400" />
-                        ) : (
-                          <Sword className="h-3 w-3 text-emerald-400" />
-                        )}
-                        <Badge
-                          variant="secondary"
-                          className={`text-xs ${
-                            character.status === "alive" || character.status === "active"
-                              ? "bg-emerald-500/20 text-emerald-400"
-                              : character.status === "dead"
-                                ? "bg-red-500/20 text-red-400"
-                                : "bg-slate-500/20 text-slate-400"
-                          }`}
-                        >
-                          {character.type}
-                        </Badge>
+              {suggestions.map((character, index) => {
+                const color = getCharacterColor(character.type, character.character_category)
+                const icon = getCharacterIcon(character.type, character.character_category)
+
+                return (
+                  <div
+                    key={character.id}
+                    className={`flex items-center gap-3 p-2 rounded cursor-pointer transition-colors ${
+                      index === selectedIndex ? "bg-muted" : "hover:bg-muted/50"
+                    }`}
+                    onClick={() => insertMention(character)}
+                  >
+                    <Avatar className="h-6 w-6 bg-muted">
+                      <AvatarFallback className="bg-muted text-muted-foreground text-xs">
+                        {character.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-foreground truncate">{character.name}</span>
+                        <div className="flex items-center gap-1">
+                          {icon}
+                          <Badge
+                            variant="secondary"
+                            className="text-xs"
+                            style={{
+                              backgroundColor: `color-mix(in srgb, ${color} 20%, transparent)`,
+                              color: color,
+                            }}
+                          >
+                            {character.type === "player"
+                              ? "Jogador"
+                              : character.character_category === "ally"
+                                ? "Aliado"
+                                : character.character_category === "enemy"
+                                  ? "Inimigo"
+                                  : "Neutral"}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
-            <div className="mt-2 pt-2 border-t border-slate-700">
-              <p className="text-xs text-slate-400">Use ↑↓ para navegar, Enter para selecionar, Esc para cancelar</p>
+            <div className="mt-2 pt-2 border-t border-primary/30">
+              <p className="text-xs text-muted-foreground">
+                Use ↑↓ para navegar, Enter para selecionar, Esc para cancelar
+              </p>
             </div>
           </CardContent>
         </Card>

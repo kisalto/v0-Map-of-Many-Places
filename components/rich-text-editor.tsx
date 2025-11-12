@@ -314,7 +314,7 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
 
   return (
     <div className="relative space-y-2">
-      <div className="flex items-center gap-1 p-2 bg-[#302831] border border-[#EE9B3A]/30 rounded-lg">
+      <div className="flex items-center gap-1 p-2 bg-secondary border border-primary/30 rounded-lg">
         <Button
           type="button"
           variant="ghost"
@@ -324,7 +324,7 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
             applyFormat("bold")
           }}
           disabled={disabled}
-          className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
+          className="h-8 w-8 p-0 hover:bg-primary/20 hover:text-primary"
           title="Negrito (Ctrl+B)"
         >
           <Bold className="h-4 w-4" />
@@ -338,7 +338,7 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
             applyFormat("italic")
           }}
           disabled={disabled}
-          className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
+          className="h-8 w-8 p-0 hover:bg-primary/20 hover:text-primary"
           title="Itálico (Ctrl+I)"
         >
           <Italic className="h-4 w-4" />
@@ -352,13 +352,13 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
             applyFormat("underline")
           }}
           disabled={disabled}
-          className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
+          className="h-8 w-8 p-0 hover:bg-primary/20 hover:text-primary"
           title="Sublinhado (Ctrl+U)"
         >
           <Underline className="h-4 w-4" />
         </Button>
 
-        <Separator orientation="vertical" className="h-6 mx-1 bg-[#EE9B3A]/30" />
+        <Separator orientation="vertical" className="h-6 mx-1 bg-primary/30" />
 
         <Button
           type="button"
@@ -369,7 +369,7 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
             insertList(false)
           }}
           disabled={disabled}
-          className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
+          className="h-8 w-8 p-0 hover:bg-primary/20 hover:text-primary"
           title="Lista com marcadores"
         >
           <List className="h-4 w-4" />
@@ -383,20 +383,20 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
             insertList(true)
           }}
           disabled={disabled}
-          className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
+          className="h-8 w-8 p-0 hover:bg-primary/20 hover:text-primary"
           title="Lista numerada"
         >
           <ListOrdered className="h-4 w-4" />
         </Button>
 
-        <Separator orientation="vertical" className="h-6 mx-1 bg-[#EE9B3A]/30" />
+        <Separator orientation="vertical" className="h-6 mx-1 bg-primary/30" />
 
         <Button
           type="button"
           variant="ghost"
           size="sm"
           disabled={disabled}
-          className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
+          className="h-8 w-8 p-0 hover:bg-primary/20 hover:text-primary"
           title="Alinhar à esquerda"
         >
           <AlignLeft className="h-4 w-4" />
@@ -406,7 +406,7 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
           variant="ghost"
           size="sm"
           disabled={disabled}
-          className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
+          className="h-8 w-8 p-0 hover:bg-primary/20 hover:text-primary"
           title="Centralizar"
         >
           <AlignCenter className="h-4 w-4" />
@@ -416,7 +416,7 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
           variant="ghost"
           size="sm"
           disabled={disabled}
-          className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
+          className="h-8 w-8 p-0 hover:bg-primary/20 hover:text-primary"
           title="Alinhar à direita"
         >
           <AlignRight className="h-4 w-4" />
@@ -426,7 +426,7 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
           variant="ghost"
           size="sm"
           disabled={disabled}
-          className="h-8 w-8 p-0 hover:bg-[#EE9B3A]/20 hover:text-[#EE9B3A]"
+          className="h-8 w-8 p-0 hover:bg-primary/20 hover:text-primary"
           title="Justificar"
         >
           <AlignJustify className="h-4 w-4" />
@@ -441,26 +441,22 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
           onKeyDown={handleKeyDown}
           disabled={disabled}
           spellCheck={false}
-          className="w-full min-h-[500px] p-4 bg-[#0B0A13] border border-[#302831] rounded-lg text-transparent caret-[#E7D1B1] focus:outline-none focus:ring-2 focus:ring-[#EE9B3A]/50 leading-relaxed resize-none font-sans disabled:opacity-50 disabled:cursor-not-allowed relative z-20"
+          className="w-full min-h-[500px] p-4 bg-background border-2 border-primary/30 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary leading-relaxed resize-none font-sans disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           placeholder="Comece a escrever sua anotação... Use @ para mencionar personagens e # para mencionar regiões."
+          style={{
+            caretColor: "var(--color-primary)",
+          }}
         />
 
-        <div
-          className="absolute top-0 left-0 w-full min-h-[500px] p-4 pointer-events-none whitespace-pre-wrap break-words leading-relaxed font-sans z-10"
-          aria-hidden="true"
-        >
-          {renderColoredText(value)}
-        </div>
-
         {showSuggestions && suggestions.length > 0 && (
-          <Card className="absolute z-[200] mt-1 w-64 bg-[#302831] border-[#EE9B3A]/30 shadow-lg">
+          <Card className="absolute z-[200] mt-1 w-64 bg-card border-primary/30 shadow-lg">
             <CardContent className="p-2">
               <div className="space-y-1">
                 {suggestions.map((item, index) => (
                   <div
                     key={item.id}
                     className={`flex items-center gap-3 p-2 rounded cursor-pointer transition-colors ${
-                      index === selectedIndex ? "bg-[#EE9B3A]/20" : "hover:bg-[#EE9B3A]/10"
+                      index === selectedIndex ? "bg-primary/20" : "hover:bg-primary/10"
                     }`}
                     onClick={() => {
                       console.log("[v0] RichTextEditor: Suggestion clicked:", item.name)
@@ -469,14 +465,14 @@ export function RichTextEditor({ value, onChange, adventureId, disabled = false 
                   >
                     <div
                       className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                        "type" in item ? "bg-[#60A5FA]/20 text-[#60A5FA]" : "bg-[#A78BFA]/20 text-[#A78BFA]"
+                        "type" in item ? "bg-blue-500/20 text-blue-400" : "bg-purple-500/20 text-purple-400"
                       }`}
                     >
                       {item.name.charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-sm text-[#E7D1B1]">{item.name}</span>
-                    {"type" in item && <span className="ml-auto text-xs text-[#9F8475]">Personagem</span>}
-                    {!("type" in item) && <span className="ml-auto text-xs text-[#9F8475]">Região</span>}
+                    <span className="text-sm text-foreground">{item.name}</span>
+                    {"type" in item && <span className="ml-auto text-xs text-muted-foreground">Personagem</span>}
+                    {!("type" in item) && <span className="ml-auto text-xs text-muted-foreground">Região</span>}
                   </div>
                 ))}
               </div>

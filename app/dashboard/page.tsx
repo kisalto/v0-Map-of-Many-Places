@@ -25,33 +25,32 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false })
 
   return (
-    <div className="min-h-screen bg-[#0B0A13]">
-      {/* Header */}
-      <header className="border-b border-[#EE9B3A]/30 bg-[#0B0A13]">
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-primary/30 bg-background">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-serif font-bold text-[#E7D1B1]">The Cage of Worlds</h1>
+            <h1 className="text-2xl font-serif font-bold text-foreground">The Cage of Worlds</h1>
             <UserProfile profile={profile} />
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-3xl font-serif font-bold text-[#E7D1B1] mb-2">
+            <h2 className="text-3xl font-serif font-bold text-foreground mb-2">
               Bem-vindo, {profile?.display_name || "Usuário"}!
             </h2>
-            <p className="text-[#9F8475]">Suas Campanhas</p>
+            <p className="text-muted-foreground">Suas Campanhas</p>
           </div>
           <CreateAdventureDialog>
-            <Button className="bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13] font-semibold">Nova Campanha</Button>
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
+              Nova Campanha
+            </Button>
           </CreateAdventureDialog>
         </div>
 
-        {/* Adventures Grid */}
-        <div className="border border-[#EE9B3A]/30 rounded-lg p-6">
+        <div className="border border-primary/30 rounded-lg p-6 bg-card/50">
           <AdventureGrid adventures={adventures || []} />
         </div>
       </main>

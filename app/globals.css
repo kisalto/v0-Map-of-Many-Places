@@ -142,6 +142,8 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
+    /* Added smooth color transitions for theme switching */
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
@@ -164,4 +166,15 @@
 
 [data-slot="dropdown-menu-content"] {
   z-index: 9999 !important;
+}
+
+/* Added parchment texture that adapts to theme */
+.parchment-texture {
+  background-image: radial-gradient(ellipse at top left, rgba(238, 155, 58, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(238, 155, 58, 0.05) 0%, transparent 50%);
+}
+
+.light .parchment-texture {
+  background-image: radial-gradient(ellipse at top left, rgba(184, 118, 46, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(184, 118, 46, 0.08) 0%, transparent 50%);
 }

@@ -49,6 +49,7 @@
     "@tiptap/pm": "latest",
     "@tiptap/react": "latest",
     "@tiptap/starter-kit": "latest",
+    "@tiptap/suggestion": "latest",
     "@vercel/analytics": "latest",
     "@vercel/blob": "latest",
     "autoprefixer": "^10.4.20",

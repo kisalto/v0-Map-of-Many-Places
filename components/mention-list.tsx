@@ -2,15 +2,17 @@
 
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Users, MapPin, Shield, Skull, User } from "lucide-react"
+import { Users, MapPin, Shield, Skull, User, Map } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface MentionItem {
   id: string
-  label: string
-  type: "character" | "region"
+  name: string
+  label?: string
+  type: "character" | "region" | "subregion"
   characterType?: "player" | "npc"
   category?: "ally" | "enemy" | "neutral"
+  color?: string
   isSubRegion?: boolean
 }
 
@@ -66,6 +68,10 @@ export const MentionList = forwardRef((props: MentionListProps, ref) => {
 
   const getIcon = (item: MentionItem) => {
     if (item.type === "region") {
+      return <Map className="h-4 w-4" />
+    }
+
+    if (item.type === "subregion") {
       return <MapPin className="h-4 w-4" />
     }
 
@@ -85,8 +91,16 @@ export const MentionList = forwardRef((props: MentionListProps, ref) => {
   }
 
   const getColor = (item: MentionItem) => {
+    if (item.color) {
+      return `text-[${item.color}] bg-[${item.color}]/20`
+    }
+
     if (item.type === "region") {
-      return item.isSubRegion ? "text-pink-400 bg-pink-500/20" : "text-purple-400 bg-purple-500/20"
+      return "text-purple-400 bg-purple-500/20"
+    }
+
+    if (item.type === "subregion") {
+      return "text-pink-400 bg-pink-500/20"
     }
 
     if (item.characterType === "player") {
@@ -106,7 +120,11 @@ export const MentionList = forwardRef((props: MentionListProps, ref) => {
 
   const getLabel = (item: MentionItem) => {
     if (item.type === "region") {
-      return item.isSubRegion ? "Sub-região" : "Região"
+      return "Região"
+    }
+
+    if (item.type === "subregion") {
+      return "Sub-região"
     }
 
     if (item.characterType === "player") {
@@ -142,7 +160,7 @@ export const MentionList = forwardRef((props: MentionListProps, ref) => {
                   {getIcon(item)}
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="text-sm font-medium text-foreground">{item.label}</p>
+                  <p className="text-sm font-medium text-foreground">{item.label || item.name}</p>
                   <p className="text-xs text-muted-foreground">{getLabel(item)}</p>
                 </div>
               </button>

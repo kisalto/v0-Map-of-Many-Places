@@ -300,3 +300,20 @@ textarea,
 .ProseMirror[style*="text-align: left"] {
   text-align: left;
 }
+
+/* Added Tiptap mention badge styles */
+.ProseMirror .mention {
+  display: inline-block;
+  margin: 0 2px;
+  vertical-align: baseline;
+}
+
+/* Added Tippy.js popup styles for mention suggestions */
+.tippy-box[data-theme~="mention"] {
+  background-color: transparent;
+  padding: 0;
+}
+
+.tippy-box[data-theme~="mention"] .tippy-content {
+  padding: 0;
+}

@@ -1,13 +1,17 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useCallback } from "react"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
 import Underline from "@tiptap/extension-underline"
 import TextAlign from "@tiptap/extension-text-align"
+import { Mention } from "@/lib/tiptap-extensions/mention"
+import Suggestion from "@tiptap/suggestion"
+import { getMentionSuggestion, getRegionSuggestion } from "@/lib/tiptap-extensions/mention-suggestion"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { createClient } from "@/lib/supabase/client"
 import {
   Bold,
   Italic,
@@ -38,6 +42,57 @@ export function WysiwygEditor({
   disabled = false,
   placeholder = "Comece a escrever... Use @ para mencionar personagens e # para regiões",
 }: WysiwygEditorProps) {
+  const supabase = createClient()
+
+  const fetchSuggestions = useCallback(
+    async (query: string, type: "character" | "region") => {
+      if (type === "character") {
+        const { data: characters } = await supabase
+          .from("characters")
+          .select("id, name, character_type, tag_color, tag_label")
+          .eq("adventure_id", adventureId)
+          .ilike("name", `%${query}%`)
+          .limit(10)
+
+        return (
+          characters?.map((char) => ({
+            id: char.id,
+            name: char.tag_label || char.name,
+            type: "character" as const,
+            color: char.tag_color,
+            characterType: char.character_type as "player" | "ally" | "enemy" | "neutral",
+          })) || []
+        )
+      } else {
+        const [{ data: regions }, { data: subregions }] = await Promise.all([
+          supabase
+            .from("regions")
+            .select("id, name, tag_color, tag_label")
+            .eq("adventure_id", adventureId)
+            .ilike("name", `%${query}%`)
+            .limit(5),
+          supabase.from("subregions").select("id, name, tag_color, tag_label").ilike("name", `%${query}%`).limit(5),
+        ])
+
+        return [
+          ...(regions?.map((region) => ({
+            id: region.id,
+            name: region.tag_label || region.name,
+            type: "region" as const,
+            color: region.tag_color,
+          })) || []),
+          ...(subregions?.map((subregion) => ({
+            id: subregion.id,
+            name: subregion.tag_label || subregion.name,
+            type: "subregion" as const,
+            color: subregion.tag_color,
+          })) || []),
+        ]
+      }
+    },
+    [adventureId, supabase],
+  )
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -52,6 +107,36 @@ export function WysiwygEditor({
       Placeholder.configure({
         placeholder,
       }),
+      Mention.configure({
+        HTMLAttributes: {
+          class: "mention",
+        },
+      }).extend({
+        addProseMirrorPlugins() {
+          return [
+            Suggestion({
+              editor: this.editor,
+              ...getMentionSuggestion(adventureId, fetchSuggestions),
+            }),
+          ]
+        },
+      }),
+      Mention.extend({ name: "regionMention" })
+        .configure({
+          HTMLAttributes: {
+            class: "mention region-mention",
+          },
+        })
+        .extend({
+          addProseMirrorPlugins() {
+            return [
+              Suggestion({
+                editor: this.editor,
+                ...getRegionSuggestion(adventureId, fetchSuggestions),
+              }),
+            ]
+          },
+        }),
     ],
     content: value,
     editable: !disabled,
@@ -255,6 +340,11 @@ export function WysiwygEditor({
 
       {/* Editor Content */}
       <EditorContent editor={editor} />
+
+      <p className="text-sm text-muted-foreground">
+        <span className="text-primary font-medium">Dica:</span> Use @ para mencionar personagens e # para mencionar
+        regiões. As menções aparecerão como badges coloridos no texto.
+      </p>
     </div>
   )
 }

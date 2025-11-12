@@ -178,12 +178,12 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
     <main className="container mx-auto px-6 py-8">
       <div className="flex items-center justify-between mb-8">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9F8475]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar regiões..."
-            className="pl-10 bg-[#302831] border-[#EE9B3A]/30 text-[#E7D1B1] placeholder:text-[#9F8475]"
+            className="pl-10 bg-card border-primary/30 text-foreground placeholder:text-muted-foreground"
           />
         </div>
         <div className="flex gap-2">
@@ -192,7 +192,7 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
               <Button
                 onClick={() => setShowCreateDialog(true)}
                 disabled={!isActive}
-                className="bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13]"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Adicionar Região
@@ -201,7 +201,7 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
                 onClick={handleToggleDeleteMode}
                 disabled={!isActive}
                 variant="outline"
-                className="border-[#EE9B3A]/50 text-[#EE9B3A] hover:bg-[#EE9B3A]/20 hover:border-[#EE9B3A] bg-transparent"
+                className="border-primary/50 text-primary hover:bg-primary/20 hover:border-primary bg-transparent"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Remover Região
@@ -212,7 +212,7 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
               <Button
                 onClick={handleCancelDelete}
                 variant="outline"
-                className="border-[#302831] text-[#E7D1B1] hover:bg-[#302831]/70 bg-transparent"
+                className="border-border text-foreground hover:bg-muted bg-transparent"
               >
                 <X className="h-4 w-4 mr-2" />
                 Cancelar
@@ -220,7 +220,7 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
               <Button
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={selectedForDeletion.size === 0}
-                className="bg-red-500 hover:bg-red-600 text-white"
+                className="bg-enemy hover:bg-enemy/90 text-white"
               >
                 <Check className="h-4 w-4 mr-2" />
                 Confirmar ({selectedForDeletion.size})
@@ -235,7 +235,7 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
           <Card
             key={region.id}
             onClick={() => !isDeleteMode && handleSelectRegion(region)}
-            className="bg-[#302831] border-[#EE9B3A]/30 hover:bg-[#302831]/70 transition-all cursor-pointer group overflow-hidden relative"
+            className="bg-card border-primary/30 hover:bg-card/70 transition-all cursor-pointer group overflow-hidden relative"
           >
             {isDeleteMode && (
               <div
@@ -245,7 +245,7 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
                   handleToggleSelection(region.id)
                 }}
               >
-                <Checkbox checked={selectedForDeletion.has(region.id)} className="bg-[#0B0A13] border-[#EE9B3A]" />
+                <Checkbox checked={selectedForDeletion.has(region.id)} className="bg-background border-primary" />
               </div>
             )}
             <CardContent className="p-0">
@@ -257,10 +257,10 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-[#EE9B3A]/20 to-[#302831]" />
+                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-card" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0B0A13] via-[#0B0A13]/50 to-transparent flex items-end p-6">
-                  <h3 className="text-[#EE9B3A] font-serif text-3xl">{region.name}</h3>
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent flex items-end p-6">
+                  <h3 className="text-primary font-serif text-3xl">{region.name}</h3>
                 </div>
               </div>
             </CardContent>
@@ -269,19 +269,19 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
       </div>
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent className="bg-[#302831] border-[#EE9B3A]/30">
+        <AlertDialogContent className="bg-card border-primary/30">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-[#E7D1B1]">Confirmar Exclusão</AlertDialogTitle>
-            <AlertDialogDescription className="text-[#9F8475]">
+            <AlertDialogTitle className="text-foreground">Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
               Tem certeza que deseja excluir {selectedForDeletion.size}{" "}
               {selectedForDeletion.size === 1 ? "região" : "regiões"}? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-transparent border-[#302831] text-[#E7D1B1] hover:bg-[#302831]/70">
+            <AlertDialogCancel className="bg-transparent border-border text-foreground hover:bg-muted">
               Cancelar
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-600 text-white">
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-enemy hover:bg-enemy/90 text-white">
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -290,17 +290,17 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
 
       {selectedRegion && (
         <Dialog open={!!selectedRegion} onOpenChange={() => setSelectedRegion(null)}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-[#0B0A13] border-[#EE9B3A]/30 text-[#E7D1B1]">
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-background border-primary/30 text-foreground">
             <DialogHeader>
               <div className="flex items-center justify-between">
-                <DialogTitle className="text-2xl font-serif text-[#EE9B3A]">{selectedRegion.name}</DialogTitle>
+                <DialogTitle className="text-2xl font-serif text-primary">{selectedRegion.name}</DialogTitle>
                 <div className="flex gap-2">
                   <Button
                     size="sm"
                     variant="ghost"
                     disabled={!isActive}
                     onClick={() => handleEdit(selectedRegion)}
-                    className="text-[#EE9B3A] hover:bg-[#EE9B3A]/10"
+                    className="text-primary hover:bg-primary/10"
                   >
                     <Edit2 className="h-4 w-4" />
                   </Button>
@@ -308,7 +308,7 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
                     size="sm"
                     variant="ghost"
                     onClick={() => setSelectedRegion(null)}
-                    className="text-[#9F8475] hover:bg-[#9F8475]/10"
+                    className="text-muted-foreground hover:bg-muted"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -318,36 +318,36 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
               <div>
-                <h4 className="text-[#EE9B3A] font-serif mb-2">Historia</h4>
-                <p className="text-[#E7D1B1] leading-relaxed text-sm">
+                <h4 className="text-primary font-serif mb-2">Historia</h4>
+                <p className="text-foreground leading-relaxed text-sm">
                   {selectedRegion.history || selectedRegion.short_description || "Nenhuma história disponível."}
                 </p>
               </div>
 
               <div className="space-y-6">
                 <div>
-                  <h4 className="text-[#EE9B3A] font-serif mb-2">Pontos de Interesse</h4>
+                  <h4 className="text-primary font-serif mb-2">Pontos de Interesse</h4>
                   {subregions.length > 0 ? (
                     <div className="space-y-2">
                       {subregions.map((sub) => (
-                        <div key={sub.id} className="text-[#E7D1B1] text-sm">
+                        <div key={sub.id} className="text-foreground text-sm">
                           <p className="font-medium">{sub.name}</p>
-                          {sub.description && <p className="text-[#9F8475] text-xs">{sub.description}</p>}
+                          {sub.description && <p className="text-muted-foreground text-xs">{sub.description}</p>}
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-[#9F8475] text-sm">Nenhum ponto de interesse registrado.</p>
+                    <p className="text-muted-foreground text-sm">Nenhum ponto de interesse registrado.</p>
                   )}
                 </div>
 
                 <div>
-                  <h4 className="text-[#EE9B3A] font-serif mb-2 flex items-center gap-2">
+                  <h4 className="text-primary font-serif mb-2 flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
                     Aparições nas Anotações ({mentions.length})
                   </h4>
                   {loadingMentions ? (
-                    <div className="flex items-center gap-2 text-[#9F8475]">
+                    <div className="flex items-center gap-2 text-muted-foreground">
                       <Loader2 className="h-4 w-4 animate-spin" />
                       <span className="text-sm">Carregando aparições...</span>
                     </div>
@@ -359,19 +359,19 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
                           href={`/adventure/${adventure.id}/entry/${entry.task_id}`}
                           className="block"
                         >
-                          <Card className="bg-[#302831] border-[#EE9B3A]/30 hover:bg-[#302831]/90 transition-colors cursor-pointer">
+                          <Card className="bg-card border-primary/30 hover:bg-card/90 transition-colors cursor-pointer">
                             <CardContent className="p-3">
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1 min-w-0">
-                                  <h5 className="text-sm font-medium text-[#E7D1B1] line-clamp-1">{entry.title}</h5>
+                                  <h5 className="text-sm font-medium text-foreground line-clamp-1">{entry.title}</h5>
                                   {entry.content && (
-                                    <p className="text-xs text-[#9F8475] line-clamp-2 mt-1">{entry.content}</p>
+                                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{entry.content}</p>
                                   )}
                                   <div className="flex items-center gap-2 mt-2">
-                                    <Badge variant="secondary" className="bg-[#EE9B3A]/20 text-[#EE9B3A] text-xs">
+                                    <Badge variant="secondary" className="bg-primary/20 text-primary text-xs">
                                       Anotação
                                     </Badge>
-                                    <span className="text-xs text-[#9F8475]">
+                                    <span className="text-xs text-muted-foreground">
                                       {new Date(entry.created_at).toLocaleDateString("pt-BR")}
                                     </span>
                                   </div>
@@ -383,7 +383,9 @@ export function RegionsView({ adventure, regions }: RegionsViewProps) {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-[#9F8475]">Esta região ainda não foi mencionada em nenhuma anotação.</p>
+                    <p className="text-sm text-muted-foreground">
+                      Esta região ainda não foi mencionada em nenhuma anotação.
+                    </p>
                   )}
                 </div>
               </div>

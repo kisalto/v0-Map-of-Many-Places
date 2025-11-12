@@ -165,12 +165,12 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
     <main className="container mx-auto px-6 py-8">
       <div className="flex items-center justify-between mb-8">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9F8475]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar personagens..."
-            className="pl-10 bg-[#302831] border-[#EE9B3A]/30 text-[#E7D1B1] placeholder:text-[#9F8475]"
+            className="pl-10 bg-card border-primary/30 text-foreground placeholder:text-muted-foreground"
           />
         </div>
         <div className="flex gap-2">
@@ -179,7 +179,7 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
               <Button
                 onClick={() => setShowCreateDialog(true)}
                 disabled={!isActive}
-                className="bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13]"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Adicionar Personagem
@@ -188,7 +188,7 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
                 onClick={handleToggleDeleteMode}
                 disabled={!isActive}
                 variant="outline"
-                className="border-[#EE9B3A]/50 text-[#EE9B3A] hover:bg-[#EE9B3A]/20 hover:border-[#EE9B3A] bg-transparent"
+                className="border-primary/50 text-primary hover:bg-primary/20 hover:border-primary bg-transparent"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Remover Personagem
@@ -199,7 +199,7 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
               <Button
                 onClick={handleCancelDelete}
                 variant="outline"
-                className="border-[#302831] text-[#E7D1B1] hover:bg-[#302831]/70 bg-transparent"
+                className="border-border text-foreground hover:bg-muted bg-transparent"
               >
                 <X className="h-4 w-4 mr-2" />
                 Cancelar
@@ -207,7 +207,7 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
               <Button
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={selectedForDeletion.size === 0}
-                className="bg-red-500 hover:bg-red-600 text-white"
+                className="bg-enemy hover:bg-enemy/90 text-white"
               >
                 <Check className="h-4 w-4 mr-2" />
                 Confirmar ({selectedForDeletion.size})
@@ -222,7 +222,7 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
           <Card
             key={character.id}
             onClick={() => !isDeleteMode && handleSelectCharacter(character)}
-            className="bg-[#302831] border-[#EE9B3A]/30 hover:bg-[#302831]/70 transition-all cursor-pointer group relative"
+            className="bg-card border-primary/30 hover:bg-card/70 transition-all cursor-pointer group relative"
           >
             {isDeleteMode && (
               <div
@@ -232,7 +232,7 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
                   handleToggleSelection(character.id)
                 }}
               >
-                <Checkbox checked={selectedForDeletion.has(character.id)} className="bg-[#0B0A13] border-[#EE9B3A]" />
+                <Checkbox checked={selectedForDeletion.has(character.id)} className="bg-background border-primary" />
               </div>
             )}
             <CardContent className="p-0">
@@ -244,14 +244,16 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-[#EE9B3A]/20 to-[#302831] flex items-center justify-center">
-                    <span className="text-6xl text-[#EE9B3A]/50">{character.name.charAt(0)}</span>
+                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-card flex items-center justify-center">
+                    <span className="text-6xl text-primary/50">{character.name.charAt(0)}</span>
                   </div>
                 )}
               </div>
               <div className="p-4">
-                <h3 className="text-[#E7D1B1] font-serif text-lg mb-1">{character.name}</h3>
-                <p className="text-[#9F8475] text-sm line-clamp-2">{character.short_description || "Sem descrição"}</p>
+                <h3 className="text-foreground font-serif text-lg mb-1">{character.name}</h3>
+                <p className="text-muted-foreground text-sm line-clamp-2">
+                  {character.short_description || "Sem descrição"}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -259,19 +261,19 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
       </div>
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent className="bg-[#302831] border-[#EE9B3A]/30">
+        <AlertDialogContent className="bg-card border-primary/30">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-[#E7D1B1]">Confirmar Exclusão</AlertDialogTitle>
-            <AlertDialogDescription className="text-[#9F8475]">
+            <AlertDialogTitle className="text-foreground">Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
               Tem certeza que deseja excluir {selectedForDeletion.size}{" "}
               {selectedForDeletion.size === 1 ? "personagem" : "personagens"}? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-transparent border-[#302831] text-[#E7D1B1] hover:bg-[#302831]/70">
+            <AlertDialogCancel className="bg-transparent border-border text-foreground hover:bg-muted">
               Cancelar
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-600 text-white">
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-enemy hover:bg-enemy/90 text-white">
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -280,17 +282,17 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
 
       {selectedCharacter && (
         <Dialog open={!!selectedCharacter} onOpenChange={() => setSelectedCharacter(null)}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-[#0B0A13] border-[#EE9B3A]/30 text-[#E7D1B1]">
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-background border-primary/30 text-foreground">
             <DialogHeader>
               <div className="flex items-center justify-between">
-                <DialogTitle className="text-2xl font-serif text-[#EE9B3A]">{selectedCharacter.name}</DialogTitle>
+                <DialogTitle className="text-2xl font-serif text-primary">{selectedCharacter.name}</DialogTitle>
                 <div className="flex gap-2">
                   <Button
                     size="sm"
                     variant="ghost"
                     disabled={!isActive}
                     onClick={() => handleEdit(selectedCharacter)}
-                    className="text-[#EE9B3A] hover:bg-[#EE9B3A]/10"
+                    className="text-primary hover:bg-primary/10"
                   >
                     <Edit2 className="h-4 w-4" />
                   </Button>
@@ -298,7 +300,7 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
                     size="sm"
                     variant="ghost"
                     onClick={() => setSelectedCharacter(null)}
-                    className="text-[#9F8475] hover:bg-[#9F8475]/10"
+                    className="text-muted-foreground hover:bg-muted"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -314,26 +316,26 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-[#EE9B3A]/20 to-[#302831] flex items-center justify-center">
-                    <span className="text-8xl text-[#EE9B3A]/50">{selectedCharacter.name.charAt(0)}</span>
+                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-card flex items-center justify-center">
+                    <span className="text-8xl text-primary/50">{selectedCharacter.name.charAt(0)}</span>
                   </div>
                 )}
               </div>
               <div className="space-y-6">
                 <div>
-                  <h4 className="text-[#EE9B3A] font-serif mb-2">História</h4>
-                  <p className="text-[#E7D1B1] leading-relaxed text-sm">
+                  <h4 className="text-primary font-serif mb-2">História</h4>
+                  <p className="text-foreground leading-relaxed text-sm">
                     {selectedCharacter.history || selectedCharacter.short_description || "Nenhuma história disponível."}
                   </p>
                 </div>
 
                 <div>
-                  <h4 className="text-[#EE9B3A] font-serif mb-2 flex items-center gap-2">
+                  <h4 className="text-primary font-serif mb-2 flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
                     Aparições nas Anotações ({mentions.length})
                   </h4>
                   {loadingMentions ? (
-                    <div className="flex items-center gap-2 text-[#9F8475]">
+                    <div className="flex items-center gap-2 text-muted-foreground">
                       <Loader2 className="h-4 w-4 animate-spin" />
                       <span className="text-sm">Carregando aparições...</span>
                     </div>
@@ -345,19 +347,19 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
                           href={`/adventure/${adventure.id}/entry/${entry.task_id}`}
                           className="block"
                         >
-                          <Card className="bg-[#302831] border-[#EE9B3A]/30 hover:bg-[#302831]/90 transition-colors cursor-pointer">
+                          <Card className="bg-card border-primary/30 hover:bg-card/90 transition-colors cursor-pointer">
                             <CardContent className="p-3">
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1 min-w-0">
-                                  <h5 className="text-sm font-medium text-[#E7D1B1] line-clamp-1">{entry.title}</h5>
+                                  <h5 className="text-sm font-medium text-foreground line-clamp-1">{entry.title}</h5>
                                   {entry.content && (
-                                    <p className="text-xs text-[#9F8475] line-clamp-2 mt-1">{entry.content}</p>
+                                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{entry.content}</p>
                                   )}
                                   <div className="flex items-center gap-2 mt-2">
-                                    <Badge variant="secondary" className="bg-[#EE9B3A]/20 text-[#EE9B3A] text-xs">
+                                    <Badge variant="secondary" className="bg-primary/20 text-primary text-xs">
                                       Anotação
                                     </Badge>
-                                    <span className="text-xs text-[#9F8475]">
+                                    <span className="text-xs text-muted-foreground">
                                       {new Date(entry.created_at).toLocaleDateString("pt-BR")}
                                     </span>
                                   </div>
@@ -369,7 +371,7 @@ export function CharactersView({ adventure, characters }: CharactersViewProps) {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-[#9F8475]">
+                    <p className="text-sm text-muted-foreground">
                       Este personagem ainda não foi mencionado em nenhuma anotação.
                     </p>
                   )}

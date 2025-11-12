@@ -90,12 +90,13 @@ export function CharacterCrudDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#302831] border-[#EE9B3A]/30 max-w-2xl max-h-[90vh] overflow-y-auto">
+      {/* Use theme-aware classes for dialog */}
+      <DialogContent className="bg-card border-primary/30 max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-[#E7D1B1] font-serif text-2xl">
+          <DialogTitle className="text-foreground font-serif text-2xl">
             {character ? "Editar Personagem" : "Novo Personagem"}
           </DialogTitle>
-          <DialogDescription className="text-[#9F8475]">
+          <DialogDescription className="text-muted-foreground">
             {character ? "Atualize as informações do personagem" : "Adicione um novo personagem à sua campanha"}
           </DialogDescription>
         </DialogHeader>
@@ -103,27 +104,27 @@ export function CharacterCrudDialog({
         <div className="space-y-6 py-4">
           {/* Image URL */}
           <div className="space-y-2">
-            <Label className="text-[#E7D1B1]">Imagem do Personagem</Label>
+            <Label className="text-foreground">Imagem do Personagem</Label>
             <ImageUpload value={imageUrl} onChange={setImageUrl} onRemove={() => setImageUrl("")} />
           </div>
 
           {/* Name */}
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-[#E7D1B1]">
-              Nome <span className="text-red-400">*</span>
+            <Label htmlFor="name" className="text-foreground">
+              Nome <span className="text-enemy">*</span>
             </Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Strahd von Zarovich"
-              className="bg-[#0B0A13] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475]"
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
 
           {/* Short Description */}
           <div className="space-y-2">
-            <Label htmlFor="short-description" className="text-[#E7D1B1]">
+            <Label htmlFor="short-description" className="text-foreground">
               Descrição Curta
             </Label>
             <Input
@@ -131,13 +132,13 @@ export function CharacterCrudDialog({
               value={shortDescription}
               onChange={(e) => setShortDescription(e.target.value)}
               placeholder="Ex: Vampiro, Senhor das trevas de Barovia"
-              className="bg-[#0B0A13] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475]"
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
 
           {/* History */}
           <div className="space-y-2">
-            <Label htmlFor="history" className="text-[#E7D1B1]">
+            <Label htmlFor="history" className="text-foreground">
               História
             </Label>
             <Textarea
@@ -146,23 +147,23 @@ export function CharacterCrudDialog({
               onChange={(e) => setHistory(e.target.value)}
               placeholder="Conte a história deste personagem..."
               rows={6}
-              className="bg-[#0B0A13] border-[#302831] text-[#E7D1B1] placeholder:text-[#9F8475] resize-none"
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground resize-none"
             />
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-[#302831]">
+        <div className="flex justify-end gap-3 pt-4 border-t border-border">
           <Button
             onClick={() => onOpenChange(false)}
             variant="outline"
-            className="border-[#302831] text-[#E7D1B1] hover:bg-[#302831]/80 bg-transparent"
+            className="border-border text-foreground hover:bg-muted bg-transparent"
           >
             Cancelar
           </Button>
           <Button
             onClick={handleSave}
             disabled={saving || !name.trim()}
-            className="bg-[#EE9B3A] hover:bg-[#EE9B3A]/90 text-[#0B0A13]"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             {saving ? "Salvando..." : character ? "Atualizar" : "Criar"}
           </Button>

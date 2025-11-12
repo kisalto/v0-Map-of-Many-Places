@@ -30,7 +30,7 @@ export default async function DashboardPage() {
       <header className="border-b border-[#EE9B3A]/30 bg-[#0B0A13]">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-serif font-bold text-[#E7D1B1]">Map of Many Places</h1>
+            <h1 className="text-2xl font-serif font-bold text-[#E7D1B1]">The Cage of Worlds</h1>
             <UserProfile profile={profile} />
           </div>
         </div>

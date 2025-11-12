@@ -178,7 +178,7 @@ export default function SignUpPage() {
     <div className="min-h-screen bg-[#0B0A13] flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-serif font-bold text-[#EE9B3A] mb-2">Map of Many Places</h1>
+          <h1 className="text-4xl font-serif font-bold text-[#EE9B3A] mb-2">The Cage of Worlds</h1>
           <p className="text-[#9F8475]">Comece sua jornada</p>
         </div>
 

@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Map of Many Places - D&D Campaign Manager",
+  title: "The Cage of Worlds - D&D Campaign Manager",
   description: "Organize your D&D campaigns with notes, characters, regions, and tasks",
   generator: "v0.app",
 }

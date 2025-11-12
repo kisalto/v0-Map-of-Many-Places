@@ -1,4 +1,4 @@
-# Adventure creation system
+# The Cage of Worlds
 
 *Automatically synced with your [v0.app](https://v0.app) deployments*
 
@@ -6,6 +6,8 @@
 [![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/2pORFp2t5A4)
 
 ## Overview
+
+The Cage of Worlds is a D&D campaign management system inspired by Sigil, the City of Doors at the center of the multiverse. Organize your adventures, characters, regions, and stories in one place.
 
 This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
 Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
